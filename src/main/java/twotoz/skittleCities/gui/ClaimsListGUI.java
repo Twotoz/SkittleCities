@@ -35,7 +35,7 @@ public class ClaimsListGUI implements Listener {
             }
         }
         
-        this.inventory = Bukkit.createInventory(null, 54, "My Claims (" + playerClaims.size() + ")");
+        this.inventory = plugin.getServer().createInventory(null, 54, "My Claims (" + playerClaims.size() + ")");
         
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         

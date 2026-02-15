@@ -51,7 +51,7 @@ public class TrustCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        Player target = Bukkit.getPlayer(args[0]);
+        Player target = plugin.getServer().getPlayer(args[0]);
         if (target == null) {
             player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
                 "&cPlayer not found."));
@@ -83,7 +83,7 @@ public class TrustCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            return Bukkit.getOnlinePlayers().stream()
+            return plugin.getServer().getOnlinePlayers().stream()
                 .map(Player::getName)
                 .filter(name -> name.toLowerCase().startsWith(args[0].toLowerCase()))
                 .collect(Collectors.toList());

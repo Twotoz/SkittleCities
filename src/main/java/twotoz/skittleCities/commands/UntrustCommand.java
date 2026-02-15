@@ -52,7 +52,7 @@ public class UntrustCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        Player target = Bukkit.getPlayer(args[0]);
+        Player target = plugin.getServer().getPlayer(args[0]);
         if (target == null) {
             player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
                 "&cPlayer not found."));
@@ -85,7 +85,7 @@ public class UntrustCommand implements CommandExecutor, TabCompleter {
             Region region = plugin.getRegionManager().getRegionAt(player.getLocation());
             if (region != null && region.getOwner() != null && region.getOwner().equals(player.getUniqueId())) {
                 return region.getTrustedPlayers().stream()
-                    .map(uuid -> Bukkit.getOfflinePlayer(uuid).getName())
+                    .map(uuid -> plugin.getServer().getOfflinePlayer(uuid).getName())
                     .filter(name -> name != null && name.toLowerCase().startsWith(args[0].toLowerCase()))
                     .collect(Collectors.toList());
             }

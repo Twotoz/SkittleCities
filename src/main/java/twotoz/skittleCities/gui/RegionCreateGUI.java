@@ -29,7 +29,7 @@ public class RegionCreateGUI implements Listener {
     public RegionCreateGUI(SkittleCities plugin, Player player) {
         this.plugin = plugin;
         this.player = player;
-        this.inventory = Bukkit.createInventory(null, 27, "Create Region");
+        this.inventory = plugin.getServer().createInventory(null, 27, "Create Region");
         
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         setupInventory();

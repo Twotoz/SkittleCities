@@ -4,11 +4,12 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import twotoz.skittleCities.SkittleCities;
 import twotoz.skittleCities.data.Region;
 import twotoz.skittleCities.utils.MessageUtil;
 import twotoz.skittleCities.utils.ParticleUtil;
+import twotoz.skittleCities.utils.SchedulerUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +17,7 @@ import java.util.UUID;
 
 public class DebugToolCommand implements CommandExecutor {
     private final SkittleCities plugin;
-    private final Map<UUID, BukkitRunnable> activeTasks;
+    private final Map<UUID, BukkitTask> activeTasks;
 
     public DebugToolCommand(SkittleCities plugin) {
         this.plugin = plugin;
@@ -43,20 +44,17 @@ public class DebugToolCommand implements CommandExecutor {
             activeTasks.remove(playerId);
             MessageUtil.send(player, plugin.getConfig(), "debug-tool-disabled");
         } else {
-            // Enable
-            BukkitRunnable task = new BukkitRunnable() {
-                @Override
-                public void run() {
-                    for (Region region : plugin.getRegionManager().getAllRegions()) {
-                        if (region.getWorld().equals(player.getWorld())) {
-                            ParticleUtil.visualizeRegion(player, region);
-                        }
+            // Enable - Folia compatible
+            Runnable task = () -> {
+                for (Region region : plugin.getRegionManager().getAllRegions()) {
+                    if (region.getWorld().equals(player.getWorld())) {
+                        ParticleUtil.visualizeRegion(player, region);
                     }
                 }
             };
             
-            task.runTaskTimer(plugin, 0L, 20L); // Run every second
-            activeTasks.put(playerId, task);
+            BukkitTask scheduledTask = SchedulerUtil.runTaskTimer(plugin, task, 0L, 20L);
+            activeTasks.put(playerId, scheduledTask);
             MessageUtil.send(player, plugin.getConfig(), "debug-tool-enabled");
         }
 

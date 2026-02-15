@@ -236,7 +236,7 @@ public class DatabaseManager {
     private Region buildRegionFromResultSet(ResultSet rs) throws SQLException {
         int id = rs.getInt("id");
         String name = rs.getString("name");
-        World world = Bukkit.getWorld(rs.getString("world"));
+        World world = plugin.getServer().getWorld(rs.getString("world"));
         
         if (world == null) {
             throw new SQLException("World not found: " + rs.getString("world"));

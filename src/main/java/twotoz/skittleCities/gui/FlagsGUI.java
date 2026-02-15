@@ -28,7 +28,7 @@ public class FlagsGUI implements Listener {
         this.player = player;
         this.region = region;
         this.isWorldFlags = (region == null);
-        this.inventory = Bukkit.createInventory(null, 54, 
+        this.inventory = plugin.getServer().createInventory(null, 54, 
             isWorldFlags ? "World Flags" : "Claim Flags");
         
         plugin.getServer().getPluginManager().registerEvents(this, plugin);

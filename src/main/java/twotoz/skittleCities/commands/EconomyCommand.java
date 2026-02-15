@@ -35,7 +35,7 @@ public class EconomyCommand implements CommandExecutor, TabCompleter {
         }
 
         String action = args[0].toLowerCase();
-        Player target = Bukkit.getPlayer(args[1]);
+        Player target = plugin.getServer().getPlayer(args[1]);
         
         if (target == null) {
             sender.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
@@ -93,7 +93,7 @@ public class EconomyCommand implements CommandExecutor, TabCompleter {
                 .filter(s -> s.toLowerCase().startsWith(args[0].toLowerCase()))
                 .collect(Collectors.toList());
         } else if (args.length == 2) {
-            return Bukkit.getOnlinePlayers().stream()
+            return plugin.getServer().getOnlinePlayers().stream()
                 .map(Player::getName)
                 .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
                 .collect(Collectors.toList());

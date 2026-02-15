@@ -33,7 +33,7 @@ public class AdminClaimsGUI implements Listener {
         this.player = player;
         this.page = page;
         this.allClaims = plugin.getRegionManager().getAllRegions();
-        this.inventory = Bukkit.createInventory(null, 54, "All Claims (Page " + (page + 1) + ")");
+        this.inventory = plugin.getServer().createInventory(null, 54, "All Claims (Page " + (page + 1) + ")");
         
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         setupInventory();
@@ -65,7 +65,7 @@ public class AdminClaimsGUI implements Listener {
             
             String ownerName = "None";
             if (region.getOwner() != null) {
-                ownerName = Bukkit.getOfflinePlayer(region.getOwner()).getName();
+                ownerName = plugin.getServer().getOfflinePlayer(region.getOwner()).getName();
                 if (ownerName == null) ownerName = "Unknown";
             }
             lore.add(MessageUtil.colorize("&7Owner: &e" + ownerName));

@@ -27,10 +27,6 @@ public class BalanceCommand implements CommandExecutor {
             new String[]{"%balance%"}, 
             new String[]{String.format("%.2f", balance)});
         
-        // Helper message
-        player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-            "&7Right-click &e[FOR HIRE] &7or &e[FOR SALE] &7signs to purchase claims"));
-        
         return true;
     }
 }

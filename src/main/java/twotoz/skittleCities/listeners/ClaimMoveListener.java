@@ -68,7 +68,7 @@ public class ClaimMoveListener implements Listener {
 
         String ownerName = "Unknown";
         if (region.getOwner() != null) {
-            ownerName = Bukkit.getOfflinePlayer(region.getOwner()).getName();
+            ownerName = plugin.getServer().getOfflinePlayer(region.getOwner()).getName();
             if (ownerName == null) ownerName = "Unknown";
         } else {
             ownerName = "Unclaimed";

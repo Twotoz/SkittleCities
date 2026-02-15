@@ -76,6 +76,12 @@ commands:
     description: View and manage all claims
     usage: /cadmin
     permission: skittlecities.admin
+    
+  citycommandbypass:
+    description: Toggle command restrictions in the city
+    usage: /citycommandbypass
+    permission: skittlecities.commandbypass
+    aliases: [ccbypass]
 
 permissions:
   skittlecities.admin:
@@ -85,6 +91,7 @@ permissions:
       skittlecities.player: true
       skittlecities.trust: true
       skittlecities.debug: true
+      skittlecities.commandbypass: true
       
   skittlecities.player:
     description: Basic player permissions
@@ -97,3 +104,7 @@ permissions:
   skittlecities.debug:
     description: Allows using debug visualization
     default: true
+    
+  skittlecities.commandbypass:
+    description: Allows bypassing city command restrictions
+    default: op

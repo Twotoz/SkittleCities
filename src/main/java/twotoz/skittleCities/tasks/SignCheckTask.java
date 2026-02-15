@@ -3,13 +3,12 @@ package twotoz.skittleCities.tasks;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.scheduler.BukkitRunnable;
 import twotoz.skittleCities.SkittleCities;
 import twotoz.skittleCities.data.Region;
 
 import java.util.List;
 
-public class SignCheckTask extends BukkitRunnable {
+public class SignCheckTask implements Runnable {
     private final SkittleCities plugin;
 
     public SignCheckTask(SkittleCities plugin) {

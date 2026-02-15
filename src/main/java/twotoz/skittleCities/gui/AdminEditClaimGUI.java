@@ -27,7 +27,7 @@ public class AdminEditClaimGUI implements Listener {
         this.plugin = plugin;
         this.player = player;
         this.region = region;
-        this.inventory = Bukkit.createInventory(null, 27, "Edit: " + region.getName());
+        this.inventory = plugin.getServer().createInventory(null, 27, "Edit: " + region.getName());
         
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         setupInventory();
@@ -81,7 +81,7 @@ public class AdminEditClaimGUI implements Listener {
         
         String ownerName = "None";
         if (region.getOwner() != null) {
-            ownerName = Bukkit.getOfflinePlayer(region.getOwner()).getName();
+            ownerName = plugin.getServer().getOfflinePlayer(region.getOwner()).getName();
             if (ownerName == null) ownerName = "Unknown";
         }
         infoLore.add(MessageUtil.colorize("&7Owner: &e" + ownerName));

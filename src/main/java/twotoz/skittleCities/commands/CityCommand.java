@@ -24,7 +24,7 @@ public class CityCommand implements CommandExecutor {
         }
 
         String worldName = plugin.getConfig().getString("world-name");
-        World cityWorld = Bukkit.getWorld(worldName);
+        World cityWorld = plugin.getServer().getWorld(worldName);
 
         if (cityWorld == null) {
             player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 

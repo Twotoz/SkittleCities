@@ -28,7 +28,7 @@ public class ClaimManageGUI implements Listener {
         this.plugin = plugin;
         this.player = player;
         this.region = region;
-        this.inventory = Bukkit.createInventory(null, 27, "Manage: " + region.getName());
+        this.inventory = plugin.getServer().createInventory(null, 27, "Manage: " + region.getName());
         
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         setupInventory();
@@ -79,7 +79,7 @@ public class ClaimManageGUI implements Listener {
         trustedLore.add("");
         
         for (UUID uuid : region.getTrustedPlayers()) {
-            String name = Bukkit.getOfflinePlayer(uuid).getName();
+            String name = plugin.getServer().getOfflinePlayer(uuid).getName();
             if (name != null) {
                 trustedLore.add(MessageUtil.colorize("&7• &e" + name));
             }

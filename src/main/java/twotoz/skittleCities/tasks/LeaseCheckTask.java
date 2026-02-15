@@ -1,14 +1,12 @@
 package twotoz.skittleCities.tasks;
 
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.scheduler.BukkitRunnable;
 import twotoz.skittleCities.SkittleCities;
 import twotoz.skittleCities.data.Region;
 
 import java.util.List;
 
-public class LeaseCheckTask extends BukkitRunnable {
+public class LeaseCheckTask implements Runnable {
     private final SkittleCities plugin;
 
     public LeaseCheckTask(SkittleCities plugin) {
@@ -39,7 +37,7 @@ public class LeaseCheckTask extends BukkitRunnable {
                 plugin.getRegionManager().handleLeaseRenewal(region);
 
                 // Notify owner if online
-                OfflinePlayer owner = Bukkit.getOfflinePlayer(region.getOwner());
+                OfflinePlayer owner = plugin.getServer().getOfflinePlayer(region.getOwner());
                 if (owner.isOnline() && owner.getPlayer() != null) {
                     owner.getPlayer().sendMessage(
                         plugin.getConfig().getString("messages.prefix") +
@@ -51,7 +49,7 @@ public class LeaseCheckTask extends BukkitRunnable {
         }
 
         // Lease expired, notify and reset
-        OfflinePlayer owner = Bukkit.getOfflinePlayer(region.getOwner());
+        OfflinePlayer owner = plugin.getServer().getOfflinePlayer(region.getOwner());
         if (owner.isOnline() && owner.getPlayer() != null) {
             owner.getPlayer().sendMessage(
                 plugin.getConfig().getString("messages.prefix") +
