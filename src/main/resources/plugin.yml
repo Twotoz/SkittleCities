@@ -1,0 +1,99 @@
+name: SkittleCities
+version: '${version}'
+main: twotoz.skittleCities.SkittleCities
+api-version: '1.21'
+author: TwoToz
+description: Advanced claim and city management plugin
+
+commands:
+  ctool:
+    description: Get the region selection tool
+    usage: /ctool
+    permission: skittlecities.admin
+    
+  cregioncreate:
+    description: Create a new region from your selection
+    usage: /cregioncreate
+    permission: skittlecities.admin
+    
+  cflags:
+    description: Manage flags for claims or the world
+    usage: /cflags
+    permission: skittlecities.admin
+    
+  ctrust:
+    description: Trust a player in your claim
+    usage: /ctrust <player>
+    permission: skittlecities.trust
+    
+  cuntrust:
+    description: Untrust a player from your claim
+    usage: /cuntrust <player>
+    permission: skittlecities.trust
+    
+  cbal:
+    description: Check your balance
+    usage: /cbal
+    permission: skittlecities.player
+    
+  cdebugtool:
+    description: Toggle claim visualization
+    usage: /cdebugtool
+    permission: skittlecities.debug
+    
+  cignoreclaims:
+    description: Toggle bypassing claim protections
+    usage: /cignoreclaims
+    permission: skittlecities.admin
+    
+  cautoextend:
+    description: Toggle auto-extend for your leased claim
+    usage: /cautoextend
+    permission: skittlecities.player
+    
+  cclaims:
+    description: View and manage all your claims
+    usage: /cclaims
+    permission: skittlecities.player
+    
+  city:
+    description: Teleport to the city
+    usage: /city
+    permission: skittlecities.player
+    aliases: [cspawn]
+    
+  setcityspawn:
+    description: Set the city spawn location
+    usage: /setcityspawn
+    permission: skittlecities.admin
+    
+  ceconomy:
+    description: Manage player economy
+    usage: /ceconomy <give|take|set> <player> <amount>
+    permission: skittlecities.admin
+    
+  cadmin:
+    description: View and manage all claims
+    usage: /cadmin
+    permission: skittlecities.admin
+
+permissions:
+  skittlecities.admin:
+    description: Grants access to all admin commands
+    default: op
+    children:
+      skittlecities.player: true
+      skittlecities.trust: true
+      skittlecities.debug: true
+      
+  skittlecities.player:
+    description: Basic player permissions
+    default: true
+    
+  skittlecities.trust:
+    description: Allows trusting/untrusting players
+    default: true
+    
+  skittlecities.debug:
+    description: Allows using debug visualization
+    default: true

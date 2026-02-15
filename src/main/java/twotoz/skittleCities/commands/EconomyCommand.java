@@ -1,0 +1,105 @@
+package twotoz.skittleCities.commands;
+
+import org.bukkit.Bukkit;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
+import twotoz.skittleCities.SkittleCities;
+import twotoz.skittleCities.utils.MessageUtil;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class EconomyCommand implements CommandExecutor, TabCompleter {
+    private final SkittleCities plugin;
+
+    public EconomyCommand(SkittleCities plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!sender.hasPermission("skittlecities.admin")) {
+            MessageUtil.send(sender, plugin.getConfig(), "no-permission");
+            return true;
+        }
+
+        if (args.length < 3) {
+            sender.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                "&cUsage: /ceconomy <give|take|set> <player> <amount>"));
+            return true;
+        }
+
+        String action = args[0].toLowerCase();
+        Player target = Bukkit.getPlayer(args[1]);
+        
+        if (target == null) {
+            sender.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                "&cPlayer not found."));
+            return true;
+        }
+
+        double amount;
+        try {
+            amount = Double.parseDouble(args[2]);
+        } catch (NumberFormatException e) {
+            sender.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                "&cInvalid amount."));
+            return true;
+        }
+
+        switch (action) {
+            case "give":
+                plugin.getEconomyManager().addBalance(target.getUniqueId(), amount);
+                sender.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                    "&aGave &e$" + amount + "&a to &e" + target.getName()));
+                target.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                    "&aYou received &e$" + amount));
+                break;
+
+            case "take":
+                plugin.getEconomyManager().removeBalance(target.getUniqueId(), amount);
+                sender.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                    "&aTook &e$" + amount + "&a from &e" + target.getName()));
+                target.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                    "&c$" + amount + " was removed from your balance"));
+                break;
+
+            case "set":
+                plugin.getEconomyManager().setBalance(target.getUniqueId(), amount);
+                sender.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                    "&aSet &e" + target.getName() + "'s&a balance to &e$" + amount));
+                target.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                    "&aYour balance was set to &e$" + amount));
+                break;
+
+            default:
+                sender.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                    "&cUsage: /ceconomy <give|take|set> <player> <amount>"));
+                break;
+        }
+
+        return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1) {
+            return Arrays.asList("give", "take", "set").stream()
+                .filter(s -> s.toLowerCase().startsWith(args[0].toLowerCase()))
+                .collect(Collectors.toList());
+        } else if (args.length == 2) {
+            return Bukkit.getOnlinePlayers().stream()
+                .map(Player::getName)
+                .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
+                .collect(Collectors.toList());
+        } else if (args.length == 3) {
+            return Arrays.asList("100", "500", "1000", "5000", "10000");
+        }
+        return new ArrayList<>();
+    }
+}

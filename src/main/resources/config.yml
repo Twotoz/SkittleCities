@@ -1,0 +1,125 @@
+# SkittleCities Configuration
+
+# World where the plugin is active
+world-name: world
+
+# City spawn location (set with /setcityspawn)
+city-spawn:
+  world: world
+  x: 0
+  y: 64
+  z: 0
+  yaw: 0
+  pitch: 0
+
+# Commands that ARE allowed in the city world
+# All other commands will be blocked in the city
+# Outside the city = no restrictions
+allowed-commands-in-city:
+  - help
+  - city
+  - cspawn
+  - ctool
+  - cregioncreate
+  - cflags
+  - ctrust
+  - cuntrust
+  - cbal
+  - cautoextend
+  - cclaims
+  - cdebugtool
+  - cignoreclaims
+  - setcityspawn
+  - ceconomy
+  - cadmin
+
+# Selection tool item
+selection-tool: STICK
+
+# Default starting balance for new players
+default-balance: 1000
+
+# Lease check interval in minutes
+lease-check-interval: 5
+
+# Sign auto-recovery check interval in seconds
+sign-check-interval: 30
+
+# Default world flags (applied to the entire world outside claims)
+default-world-flags:
+  pvp: true
+  block-break: false
+  block-place: false
+  mob-spawning: false
+  entity-damage: true
+  use-doors: true
+  use-buttons: true
+  use-levers: true
+  chest-access: false
+  explosion: false
+  fire-spread: false
+
+# Default claim flags (applied to new claims)
+default-claim-flags:
+  pvp: false
+  block-break: true  # Owner and trusted can break
+  block-place: true  # Owner and trusted can place
+  mob-spawning: false
+  entity-damage: true
+  use-doors: true
+  use-buttons: true
+  use-levers: true
+  chest-access: true
+  explosion: false
+  fire-spread: false
+
+# Messages (all in English)
+messages:
+  prefix: '&7&lCities&r '
+  no-permission: '&cYou don''t have permission to do this.'
+  player-only: '&cThis command can only be used by players.'
+  wrong-world: '&cThis plugin only works in the configured world.'
+  
+  # Selection
+  selection-first-point: '&aFirst point selected at &e%x%, %y%, %z%'
+  selection-second-point: '&aSecond point selected at &e%x%, %y%, %z%'
+  selection-cleared: '&aSelection cleared.'
+  no-selection: '&cYou need to make a selection first with /ctool.'
+  
+  # Region creation
+  region-created: '&aRegion created successfully!'
+  region-overlaps: '&cThis region overlaps with an existing region.'
+  
+  # Trust
+  player-trusted: '&aYou trusted &e%player%&a to your claim.'
+  player-untrusted: '&aYou untrusted &e%player%&a from your claim.'
+  already-trusted: '&c%player% is already trusted.'
+  not-trusted: '&c%player% is not trusted.'
+  not-in-claim: '&cYou are not standing in a claim.'
+  not-claim-owner: '&cYou don''t own this claim.'
+  
+  # Economy
+  balance: '&aYour balance: &e$%balance%'
+  insufficient-funds: '&cYou don''t have enough money. Required: &e$%amount%'
+  purchase-success: '&aYou successfully purchased this claim for &e$%amount%'
+  lease-success: '&aYou successfully leased this claim for &e$%amount%&a (&e%days% days&a)'
+  
+  # Flags
+  flag-updated: '&aFlag &e%flag%&a set to &e%value%'
+  
+  # Admin
+  ignore-claims-enabled: '&aYou are now ignoring claim protections.'
+  ignore-claims-disabled: '&cYou are no longer ignoring claim protections.'
+  debug-tool-enabled: '&aDebug visualization enabled.'
+  debug-tool-disabled: '&cDebug visualization disabled.'
+  
+  # Protection
+  protected: '&cThis area is protected.'
+  claim-expired: '&cYour lease on this claim has expired.'
+  
+  # Signs
+  sign-for-hire: '&6[FOR HIRE]'
+  sign-for-sale: '&6[FOR SALE]'
+  sign-price: '&e$%price%'
+  sign-duration: '&a%days% days'
+  sign-click: '&7Right-click to purchase'
