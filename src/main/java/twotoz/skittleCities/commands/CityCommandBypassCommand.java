@@ -26,6 +26,12 @@ public class CityCommandBypassCommand implements CommandExecutor {
             return true;
         }
 
+        // Null check for safety
+        if (plugin.getCommandBlockListener() == null) {
+            player.sendMessage(MessageUtil.colorize("&c[Error] CommandBlockListener not initialized!"));
+            return true;
+        }
+
         boolean enabled = plugin.getCommandBlockListener().toggleBypass(player.getUniqueId());
         
         String prefix = plugin.getConfig().getString("messages.prefix");

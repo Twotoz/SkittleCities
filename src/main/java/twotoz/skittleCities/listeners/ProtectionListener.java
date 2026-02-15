@@ -30,7 +30,7 @@ public class ProtectionListener implements Listener {
         if (isClaimSign(event.getBlock())) {
             if (!plugin.getIgnoreClaimsCommand().isBypassing(player.getUniqueId())) {
                 event.setCancelled(true);
-                MessageUtil.send(player, plugin.getConfig(), "protected");
+                MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
                 return;
             }
         }
@@ -45,14 +45,14 @@ public class ProtectionListener implements Listener {
             if (!plugin.getTrustManager().hasAccess(region, player.getUniqueId())) {
                 if (!plugin.getFlagManager().getClaimFlag(region, "block-break")) {
                     event.setCancelled(true);
-                    MessageUtil.send(player, plugin.getConfig(), "protected");
+                    MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
                 }
             }
         } else {
             // Outside claims (world protection)
             if (!plugin.getFlagManager().getWorldFlag("block-break")) {
                 event.setCancelled(true);
-                MessageUtil.send(player, plugin.getConfig(), "protected");
+                MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
             }
         }
     }
@@ -85,13 +85,13 @@ public class ProtectionListener implements Listener {
             if (!plugin.getTrustManager().hasAccess(region, player.getUniqueId())) {
                 if (!plugin.getFlagManager().getClaimFlag(region, "block-place")) {
                     event.setCancelled(true);
-                    MessageUtil.send(player, plugin.getConfig(), "protected");
+                    MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
                 }
             }
         } else {
             if (!plugin.getFlagManager().getWorldFlag("block-place")) {
                 event.setCancelled(true);
-                MessageUtil.send(player, plugin.getConfig(), "protected");
+                MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
             }
         }
     }
@@ -151,13 +151,13 @@ public class ProtectionListener implements Listener {
             if (!plugin.getTrustManager().hasAccess(region, player.getUniqueId())) {
                 if (!plugin.getFlagManager().getClaimFlag(region, interactionType)) {
                     event.setCancelled(true);
-                    MessageUtil.send(player, plugin.getConfig(), "protected");
+                    MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
                 }
             }
         } else {
             if (!plugin.getFlagManager().getWorldFlag(interactionType)) {
                 event.setCancelled(true);
-                MessageUtil.send(player, plugin.getConfig(), "protected");
+                MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
             }
         }
     }

@@ -59,6 +59,11 @@ public class ClaimMoveListener implements Listener {
     }
 
     private void handleClaimEnter(Player player, Region region) {
+        // Update status bar
+        if (plugin.getStatusBarListener() != null) {
+            plugin.getStatusBarListener().onRegionChange(player);
+        }
+        
         // Special message for safezone
         if (region.getType() == Region.RegionType.SAFEZONE) {
             String message = MessageUtil.colorize("&aEntered safezone");
@@ -83,6 +88,11 @@ public class ClaimMoveListener implements Listener {
     }
 
     private void handleClaimLeave(Player player, Region region) {
+        // Update status bar
+        if (plugin.getStatusBarListener() != null) {
+            plugin.getStatusBarListener().onRegionChange(player);
+        }
+        
         // Special message for leaving safezone
         if (region.getType() == Region.RegionType.SAFEZONE) {
             boolean worldPvp = plugin.getFlagManager().getWorldFlag("pvp");

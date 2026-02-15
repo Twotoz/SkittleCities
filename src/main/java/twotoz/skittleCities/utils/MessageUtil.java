@@ -23,4 +23,17 @@ public class MessageUtil {
     public static String colorize(String message) {
         return message.replace("&", "§");
     }
+    
+    /**
+     * Send protection message with bypass hint if player has permission
+     */
+    public static void sendProtected(org.bukkit.entity.Player player, FileConfiguration config, String bypassPermission, String bypassCommand) {
+        send(player, config, "protected");
+        
+        // Show bypass hint if player has permission
+        if (player.hasPermission(bypassPermission)) {
+            String prefix = colorize(config.getString("messages.prefix", "&6[SkittleCities]&r "));
+            player.sendMessage(prefix + colorize("&7Tip: Use &e" + bypassCommand + " &7to bypass protection"));
+        }
+    }
 }

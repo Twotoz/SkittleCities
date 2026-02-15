@@ -29,6 +29,8 @@ allowed-commands-in-city:
   - cclaims
   - cdebugtool
   - cignoreclaims
+  - citycommandbypass
+  - ccbypass
   - setcityspawn
   - ceconomy
   - cadmin
