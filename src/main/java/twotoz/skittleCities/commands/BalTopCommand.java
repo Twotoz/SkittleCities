@@ -19,8 +19,8 @@ public class BalTopCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        // Parse limit (default 10)
-        int limit = 10;
+        // Parse limit (default 5)
+        int limit = 5;
         if (args.length > 0) {
             try {
                 limit = Integer.parseInt(args[0]);

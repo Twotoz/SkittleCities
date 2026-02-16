@@ -55,5 +55,8 @@ public class WorldChangeListener implements Listener {
         
         // Save current inventory before quit
         plugin.getInventoryManager().saveInventoryOnQuit(player);
+        
+        // CRITICAL: Cleanup memory to prevent leak
+        plugin.getInventoryManager().cleanup(player);
     }
 }

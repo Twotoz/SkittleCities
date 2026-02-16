@@ -35,7 +35,7 @@ commands:
     permission: skittlecities.player
     
   cbaltop:
-    description: View the richest players (top 10 by default)
+    description: View the richest players (top 5 by default)
     usage: /cbaltop [limit]
     permission: skittlecities.player
     

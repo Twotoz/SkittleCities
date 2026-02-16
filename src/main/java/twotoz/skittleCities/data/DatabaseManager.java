@@ -218,29 +218,37 @@ public class DatabaseManager {
     }
 
     private void saveRegionFlags(Region region) {
+        if (region.getFlags().isEmpty()) return; // Nothing to save
+        
         String sql = "INSERT INTO region_flags (region_id, flag_name, flag_value) VALUES (?, ?, ?)";
         
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            // Use batch insert for better performance
             for (Map.Entry<String, Boolean> entry : region.getFlags().entrySet()) {
                 pstmt.setInt(1, region.getId());
                 pstmt.setString(2, entry.getKey());
                 pstmt.setBoolean(3, entry.getValue());
-                pstmt.executeUpdate();
+                pstmt.addBatch(); // Add to batch instead of immediate execute
             }
+            pstmt.executeBatch(); // Execute all at once - MUCH faster!
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
     private void saveRegionTrust(Region region) {
+        if (region.getTrustedPlayers().isEmpty()) return; // Nothing to save
+        
         String sql = "INSERT INTO region_trust (region_id, player_uuid) VALUES (?, ?)";
         
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            // Use batch insert for better performance
             for (UUID uuid : region.getTrustedPlayers()) {
                 pstmt.setInt(1, region.getId());
                 pstmt.setString(2, uuid.toString());
-                pstmt.executeUpdate();
+                pstmt.addBatch(); // Add to batch instead of immediate execute
             }
+            pstmt.executeBatch(); // Execute all at once - MUCH faster!
         } catch (SQLException e) {
             e.printStackTrace();
         }

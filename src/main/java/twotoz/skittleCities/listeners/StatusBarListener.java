@@ -105,44 +105,65 @@ public class StatusBarListener implements Listener {
                 String parentName = parent != null && parent.getDisplayName() != null ? 
                     parent.getDisplayName() : (parent != null ? parent.getName() : "Unknown");
                 
-                // Use parent owner for subclaims
-                if (parent != null && parent.getOwner() != null) {
-                    ownerId = parent.getOwner();
-                }
+                // CRITICAL: Check if parent is SAFEZONE
+                boolean parentIsSafezone = parent != null && parent.getType() == Region.RegionType.SAFEZONE;
+                boolean subclaimHasPvp = plugin.getFlagManager().getClaimFlag(region, "pvp");
                 
-                // Show ownership status
-                if (ownerId != null && ownerId.equals(playerId)) {
-                    status.append(MessageUtil.colorize("&aYour claim"));
-                } else if (ownerId != null) {
-                    String ownerName = plugin.getServer().getOfflinePlayer(ownerId).getName();
-                    if (ownerName == null) ownerName = "Unknown";
-                    status.append(MessageUtil.colorize("&e")).append(ownerName).append(MessageUtil.colorize("&7's claim"));
+                if (parentIsSafezone && !subclaimHasPvp) {
+                    // Subclaim of safezone WITH pvp off → Show as Safezone
+                    status.append(MessageUtil.colorize("&bSafezone"));
+                    status.append(MessageUtil.colorize(" &8(&e")).append(parentName).append(MessageUtil.colorize("&8)"));
                 } else {
-                    status.append(MessageUtil.colorize("&7Unclaimed"));
-                }
-                
-                // Show parent name in parentheses
-                status.append(MessageUtil.colorize(" &8(&e")).append(parentName).append(MessageUtil.colorize("&8)"));
-            } else {
-                // Regular claim
-                String claimName = region.getDisplayName() != null ? region.getDisplayName() : region.getName();
-                
-                String ownerName;
-                if (region.getOwner() != null) {
-                    if (region.getOwner().equals(playerId)) {
-                        ownerName = "Your claim";
-                    } else {
-                        ownerName = plugin.getServer().getOfflinePlayer(region.getOwner()).getName();
+                    // Regular subclaim OR subclaim with PVP enabled
+                    // Use parent owner for subclaims
+                    if (parent != null && parent.getOwner() != null) {
+                        ownerId = parent.getOwner();
+                    }
+                    
+                    // Show ownership status
+                    if (ownerId != null && ownerId.equals(playerId)) {
+                        status.append(MessageUtil.colorize("&aYour claim"));
+                    } else if (ownerId != null) {
+                        String ownerName = plugin.getServer().getOfflinePlayer(ownerId).getName();
                         if (ownerName == null) ownerName = "Unknown";
-                        ownerName += "'s claim";
+                        status.append(MessageUtil.colorize("&e")).append(ownerName).append(MessageUtil.colorize("&7's claim"));
+                    } else {
+                        status.append(MessageUtil.colorize("&7Unclaimed"));
+                    }
+                    
+                    // Show parent name in parentheses
+                    status.append(MessageUtil.colorize(" &8(&e")).append(parentName).append(MessageUtil.colorize("&8)"));
+                }
+            } else {
+                // Regular claim (not subclaim)
+                if (region.getType() == Region.RegionType.SAFEZONE) {
+                    // SAFEZONE
+                    String claimName = region.getDisplayName() != null ? region.getDisplayName() : region.getName();
+                    status.append(MessageUtil.colorize("&bSafezone"));
+                    if (region.getDisplayName() != null) {
+                        status.append(MessageUtil.colorize(" &8(&e")).append(claimName).append(MessageUtil.colorize("&8)"));
                     }
                 } else {
-                    ownerName = "Unclaimed";
-                }
-                
-                status.append(MessageUtil.colorize("&7")).append(ownerName);
-                if (region.getDisplayName() != null) {
-                    status.append(MessageUtil.colorize(" &8(&e")).append(claimName).append(MessageUtil.colorize("&8)"));
+                    // Regular claim
+                    String claimName = region.getDisplayName() != null ? region.getDisplayName() : region.getName();
+                    
+                    String ownerName;
+                    if (region.getOwner() != null) {
+                        if (region.getOwner().equals(playerId)) {
+                            ownerName = "Your claim";
+                        } else {
+                            ownerName = plugin.getServer().getOfflinePlayer(region.getOwner()).getName();
+                            if (ownerName == null) ownerName = "Unknown";
+                            ownerName += "'s claim";
+                        }
+                    } else {
+                        ownerName = "Unclaimed";
+                    }
+                    
+                    status.append(MessageUtil.colorize("&7")).append(ownerName);
+                    if (region.getDisplayName() != null) {
+                        status.append(MessageUtil.colorize(" &8(&e")).append(claimName).append(MessageUtil.colorize("&8)"));
+                    }
                 }
             }
             

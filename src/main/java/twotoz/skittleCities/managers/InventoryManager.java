@@ -41,7 +41,7 @@ public class InventoryManager {
     public void switchToCityInventory(Player player) {
         UUID uuid = player.getUniqueId();
 
-        // Save current inventory (other world) to file
+        // Save current inventory (other world) to file - CRASH SAFE!
         saveInventoryToFile(uuid, false, player.getInventory().getContents(), player.getInventory().getArmorContents());
         otherWorldInventories.put(uuid, player.getInventory().getContents().clone());
         otherWorldArmor.put(uuid, player.getInventory().getArmorContents().clone());
@@ -79,7 +79,7 @@ public class InventoryManager {
     public void switchToOtherWorldInventory(Player player) {
         UUID uuid = player.getUniqueId();
 
-        // Save city inventory to file
+        // Save city inventory to file - CRASH SAFE!
         saveInventoryToFile(uuid, true, player.getInventory().getContents(), player.getInventory().getArmorContents());
         cityInventories.put(uuid, player.getInventory().getContents().clone());
         cityArmor.put(uuid, player.getInventory().getArmorContents().clone());
@@ -170,9 +170,17 @@ public class InventoryManager {
     }
 
     /**
-     * Cleanup on player quit
+     * Cleanup on player quit - CRITICAL: Remove from memory!
      */
     public void cleanup(Player player) {
-        // Don't clear - inventories are persisted to disk
+        UUID uuid = player.getUniqueId();
+        
+        // Remove from memory maps to prevent memory leak
+        cityInventories.remove(uuid);
+        cityArmor.remove(uuid);
+        otherWorldInventories.remove(uuid);
+        otherWorldArmor.remove(uuid);
+        
+        // Inventories are already persisted to disk in saveInventoryOnQuit()
     }
 }

@@ -103,9 +103,32 @@ public class ClaimMoveListener implements Listener {
     
     /**
      * Check if two regions have the same owner
+     * CRITICAL: Safezones (owner=null) are treated as having the same "owner"
      */
     private boolean haveSameOwner(Region region1, Region region2) {
         if (region1 == null || region2 == null) return false;
+        
+        // Check if both are safezones (or subclaims of safezones)
+        boolean r1IsSafezone = region1.getType() == Region.RegionType.SAFEZONE;
+        boolean r2IsSafezone = region2.getType() == Region.RegionType.SAFEZONE;
+        
+        // For subclaims, check parent type
+        if (region1.isSubclaim()) {
+            Region parent1 = plugin.getRegionManager().getParentClaim(region1);
+            if (parent1 != null && parent1.getType() == Region.RegionType.SAFEZONE) {
+                r1IsSafezone = true;
+            }
+        }
+        
+        if (region2.isSubclaim()) {
+            Region parent2 = plugin.getRegionManager().getParentClaim(region2);
+            if (parent2 != null && parent2.getType() == Region.RegionType.SAFEZONE) {
+                r2IsSafezone = true;
+            }
+        }
+        
+        // Both safezones → same "owner"
+        if (r1IsSafezone && r2IsSafezone) return true;
         
         UUID owner1 = region1.getOwner();
         UUID owner2 = region2.getOwner();
@@ -141,8 +164,20 @@ public class ClaimMoveListener implements Listener {
             plugin.getStatusBarListener().onRegionChange(player);
         }
         
-        // Special message for safezone
-        if (region.getType() == Region.RegionType.SAFEZONE) {
+        // CRITICAL: Check if this is subclaim of safezone
+        boolean isSubclaimOfSafezone = false;
+        if (region.isSubclaim()) {
+            Region parent = plugin.getRegionManager().getParentClaim(region);
+            if (parent != null && parent.getType() == Region.RegionType.SAFEZONE) {
+                isSubclaimOfSafezone = true;
+            }
+        }
+        
+        // Check PVP flag of current region
+        boolean pvp = plugin.getFlagManager().getClaimFlag(region, "pvp");
+        
+        // Special message for safezone (or subclaim of safezone with pvp OFF)
+        if (region.getType() == Region.RegionType.SAFEZONE || (isSubclaimOfSafezone && !pvp)) {
             String message = MessageUtil.colorize("&aEntered safezone");
             plugin.getActionBarManager().sendTemporary(player, message);
             return;
@@ -164,8 +199,6 @@ public class ClaimMoveListener implements Listener {
         } else {
             ownerName = "Unclaimed";
         }
-
-        boolean pvp = plugin.getFlagManager().getClaimFlag(region, "pvp");
         
         String message = MessageUtil.colorize("&7Entered &e" + ownerName + "'s claim &8| &7PVP: " + 
             (pvp ? "&aON" : "&cOFF"));
@@ -179,8 +212,20 @@ public class ClaimMoveListener implements Listener {
             plugin.getStatusBarListener().onRegionChange(player);
         }
         
-        // Special message for leaving safezone
-        if (region.getType() == Region.RegionType.SAFEZONE) {
+        // CRITICAL: Check if this is subclaim of safezone
+        boolean isSubclaimOfSafezone = false;
+        if (region.isSubclaim()) {
+            Region parent = plugin.getRegionManager().getParentClaim(region);
+            if (parent != null && parent.getType() == Region.RegionType.SAFEZONE) {
+                isSubclaimOfSafezone = true;
+            }
+        }
+        
+        // Check PVP flag of region we're leaving
+        boolean regionPvp = plugin.getFlagManager().getClaimFlag(region, "pvp");
+        
+        // Special message for leaving safezone (or subclaim of safezone with pvp OFF)
+        if (region.getType() == Region.RegionType.SAFEZONE || (isSubclaimOfSafezone && !regionPvp)) {
             boolean worldPvp = plugin.getFlagManager().getWorldFlag("pvp");
             String message = MessageUtil.colorize("&7Left safezone &8| &7PVP: " + 
                 (worldPvp ? "&aON" : "&cOFF"));

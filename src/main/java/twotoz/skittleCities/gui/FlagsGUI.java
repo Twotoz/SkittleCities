@@ -54,9 +54,33 @@ public class FlagsGUI implements Listener {
     }
 
     private void setupInventory() {
-        Map<String, Boolean> flags = isWorldFlags ? 
-            plugin.getFlagManager().getWorldFlags() : 
-            region.getFlags();
+        // CRITICAL FIX: Show ALL flags from config, not just region's flags
+        // This ensures new flags appear even in old claims
+        Map<String, Boolean> flags;
+        
+        if (isWorldFlags) {
+            // World flags - just use what's in config
+            flags = plugin.getFlagManager().getWorldFlags();
+        } else {
+            // Claim flags - merge region flags with defaults
+            flags = new java.util.LinkedHashMap<>();
+            
+            // First, get ALL flags from config (these are the "available" flags)
+            org.bukkit.configuration.ConfigurationSection defaultFlags = 
+                plugin.getConfig().getConfigurationSection("default-claim-flags");
+            
+            if (defaultFlags != null) {
+                for (String flagName : defaultFlags.getKeys(false)) {
+                    // Check if region has this flag, otherwise use default
+                    if (region.getFlags().containsKey(flagName)) {
+                        flags.put(flagName, region.getFlags().get(flagName));
+                    } else {
+                        // Region doesn't have this flag yet - use default from config
+                        flags.put(flagName, defaultFlags.getBoolean(flagName));
+                    }
+                }
+            }
+        }
 
         int slot = 0;
         for (Map.Entry<String, Boolean> entry : flags.entrySet()) {
