@@ -3,6 +3,7 @@ package twotoz.skittleCities;
 import org.bukkit.plugin.java.JavaPlugin;
 import twotoz.skittleCities.commands.*;
 import twotoz.skittleCities.data.DatabaseManager;
+import twotoz.skittleCities.data.Region;
 import twotoz.skittleCities.gui.HelpGUI;
 import twotoz.skittleCities.gui.MainMenuGUI;
 import twotoz.skittleCities.listeners.ClaimMoveListener;
@@ -19,7 +20,6 @@ import twotoz.skittleCities.listeners.WorldChangeListener;
 import twotoz.skittleCities.managers.*;
 import twotoz.skittleCities.tasks.LeaseCheckTask;
 import twotoz.skittleCities.tasks.SignCheckTask;
-import twotoz.skittleCities.data.Region;
 
 public final class SkittleCities extends JavaPlugin {
     
@@ -78,6 +78,7 @@ public final class SkittleCities extends JavaPlugin {
         getCommand("cuntrust").setTabCompleter(untrustCommand);
         
         getCommand("cbal").setExecutor(new BalanceCommand(this));
+        getCommand("cbaltop").setExecutor(new BalTopCommand(this));
         
         getCommand("cautoextend").setExecutor(new AutoExtendCommand(this));
         

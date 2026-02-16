@@ -423,6 +423,25 @@ public class DatabaseManager {
         }
     }
 
+    public Map<UUID, Double> getAllBalances() {
+        Map<UUID, Double> balances = new HashMap<>();
+        String sql = "SELECT player_uuid, balance FROM player_balances ORDER BY balance DESC";
+        
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            ResultSet rs = pstmt.executeQuery();
+            
+            while (rs.next()) {
+                UUID uuid = UUID.fromString(rs.getString("player_uuid"));
+                double balance = rs.getDouble("balance");
+                balances.put(uuid, balance);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        return balances;
+    }
+
     public void close() {
         try {
             if (connection != null && !connection.isClosed()) {

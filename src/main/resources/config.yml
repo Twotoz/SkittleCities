@@ -39,6 +39,7 @@ allowed-commands-in-city:
   - ctrust
   - cuntrust
   - cbal
+  - cbaltop
   - cautoextend
   - cclaims
   - cdebugtool
