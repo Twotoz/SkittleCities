@@ -37,6 +37,10 @@ allowed-commands-in-city:
   - setcityspawn
   - ceconomy
   - cadmin
+  - csellsign
+  - crename
+  - csubclaim
+  - csubclaims
 
 # Selection tool item
 selection-tool: STICK
@@ -44,11 +48,44 @@ selection-tool: STICK
 # Default starting balance for new players
 default-balance: 1000
 
+# Combat cooldown for teleports (seconds)
+# Players cannot use /city or /leavecity for X seconds after combat
+combat-cooldown: 10
+
 # Lease check interval in minutes
 lease-check-interval: 5
 
 # Sign auto-recovery check interval in seconds
 sign-check-interval: 30
+
+# Debug tool view distance (blocks) - How far to render claim boundaries
+# Lower = better performance, Higher = see more claims
+# Default: 128 blocks (8 chunks)
+debug-view-distance: 128
+
+# Example sell sign prices (for reference)
+# Use /csellsign <material> <price> to create sell signs
+sell-prices-examples:
+  # Food
+  COOKED_PORKCHOP: 5.00
+  COOKED_BEEF: 5.00
+  COOKED_CHICKEN: 3.00
+  COOKED_MUTTON: 4.00
+  COOKED_RABBIT: 3.00
+  BREAD: 2.00
+  BAKED_POTATO: 1.50
+  # Drops
+  ROTTEN_FLESH: 0.50
+  BONE: 1.00
+  STRING: 1.50
+  SPIDER_EYE: 2.00
+  GUNPOWDER: 3.00
+  ENDER_PEARL: 10.00
+  # Resources
+  IRON_INGOT: 5.00
+  GOLD_INGOT: 10.00
+  DIAMOND: 50.00
+  EMERALD: 25.00
 
 # Default world flags (applied to the entire world outside claims)
 default-world-flags:

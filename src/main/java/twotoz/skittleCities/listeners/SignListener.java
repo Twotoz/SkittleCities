@@ -1,11 +1,14 @@
 package twotoz.skittleCities.listeners;
 
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import twotoz.skittleCities.SkittleCities;
 import twotoz.skittleCities.data.Region;
@@ -16,6 +19,77 @@ public class SignListener implements Listener {
 
     public SignListener(SkittleCities plugin) {
         this.plugin = plugin;
+    }
+
+    /**
+     * Handle player-created sell/buy signs
+     */
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onSignChange(SignChangeEvent event) {
+        Player player = event.getPlayer();
+        String line0 = event.getLine(0);
+        
+        if (line0 == null) return;
+        
+        // Check if player is creating a [SELL] or [BUY] sign
+        String stripped = org.bukkit.ChatColor.stripColor(line0).toLowerCase().trim();
+        
+        if (stripped.equals("sell") || stripped.equals("buy")) {
+            // Validate material on line 1
+            String line1 = event.getLine(1);
+            if (line1 == null || line1.trim().isEmpty()) {
+                player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                    "&cLine 2 must be the item name!"));
+                event.setCancelled(true);
+                return;
+            }
+            
+            Material material;
+            try {
+                material = Material.valueOf(line1.toUpperCase().replace(" ", "_"));
+            } catch (IllegalArgumentException e) {
+                player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                    "&cInvalid item: &e" + line1));
+                player.sendMessage(MessageUtil.colorize("&7Use exact material names like: DIAMOND, COOKED_PORKCHOP"));
+                event.setCancelled(true);
+                return;
+            }
+            
+            // Validate price on line 2
+            String line2 = event.getLine(2);
+            if (line2 == null || line2.trim().isEmpty()) {
+                player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                    "&cLine 3 must be the price!"));
+                event.setCancelled(true);
+                return;
+            }
+            
+            double price;
+            try {
+                price = Double.parseDouble(line2.trim().replace("$", ""));
+                if (price <= 0) {
+                    player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                        "&cPrice must be greater than 0!"));
+                    event.setCancelled(true);
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                    "&cInvalid price: &e" + line2));
+                event.setCancelled(true);
+                return;
+            }
+            
+            // Format the sign nicely
+            event.setLine(0, MessageUtil.colorize("&9&l[" + stripped.toUpperCase() + "]"));
+            event.setLine(1, MessageUtil.colorize("&e" + material.name()));
+            event.setLine(2, MessageUtil.colorize("&6$" + String.format("%.2f", price) + " &7each"));
+            event.setLine(3, MessageUtil.colorize("&7Sold: &e0"));
+            
+            player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                "&aCreated " + stripped + " sign for &e" + material.name() + " &aat &6$" + 
+                String.format("%.2f", price) + " &aeach!"));
+        }
     }
 
     @EventHandler
@@ -29,7 +103,14 @@ public class SignListener implements Listener {
         Player player = event.getPlayer();
         Sign sign = (Sign) block.getState();
 
-        // Find region with this sign location
+        // Check if it's a SELL sign first
+        if (plugin.getSellSignManager().isSellSign(sign)) {
+            event.setCancelled(true); // Prevent sign editor
+            plugin.getSellSignManager().handleSell(player, sign);
+            return;
+        }
+
+        // Find region with this sign location (FOR SALE/FOR HIRE claims)
         Region region = null;
         for (Region r : plugin.getRegionManager().getAllRegions()) {
             if (r.getSignLocation() != null && 

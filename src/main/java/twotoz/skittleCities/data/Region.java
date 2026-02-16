@@ -8,6 +8,7 @@ import java.util.*;
 public class Region {
     private int id;
     private String name;
+    private String displayName; // Custom name set by player
     private World world;
     private Location pos1;
     private Location pos2;
@@ -20,6 +21,7 @@ public class Region {
     private Map<String, Boolean> flags;
     private Set<UUID> trustedPlayers;
     private Location signLocation;
+    private Integer parentId; // For subclaims - parent claim ID
 
     public enum RegionType {
         FOR_HIRE,    // Lease system
@@ -93,6 +95,14 @@ public class Region {
         if (type != RegionType.FOR_HIRE || leaseExpiry == 0) return false;
         return System.currentTimeMillis() > leaseExpiry;
     }
+    
+    // Coordinate helpers
+    public int getMinX() { return Math.min(pos1.getBlockX(), pos2.getBlockX()); }
+    public int getMaxX() { return Math.max(pos1.getBlockX(), pos2.getBlockX()); }
+    public int getMinY() { return Math.min(pos1.getBlockY(), pos2.getBlockY()); }
+    public int getMaxY() { return Math.max(pos1.getBlockY(), pos2.getBlockY()); }
+    public int getMinZ() { return Math.min(pos1.getBlockZ(), pos2.getBlockZ()); }
+    public int getMaxZ() { return Math.max(pos1.getBlockZ(), pos2.getBlockZ()); }
 
     // Getters and Setters
     public int getId() { return id; }
@@ -136,4 +146,17 @@ public class Region {
 
     public Location getSignLocation() { return signLocation; }
     public void setSignLocation(Location signLocation) { this.signLocation = signLocation; }
+    
+    public String getDisplayName() { return displayName; }
+    public void setDisplayName(String displayName) { this.displayName = displayName; }
+    
+    public Integer getParentId() { return parentId; }
+    public void setParentId(Integer parentId) { this.parentId = parentId; }
+    
+    /**
+     * Check if this is a subclaim
+     */
+    public boolean isSubclaim() {
+        return parentId != null;
+    }
 }

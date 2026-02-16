@@ -33,12 +33,19 @@ public class RegionCache {
             return locationCache.get(key);
         }
 
-        // Search for region
+        // Search for region - PRIORITIZE SUBCLAIMS (smallest regions)
         Region found = null;
+        int smallestVolume = Integer.MAX_VALUE;
+        
         for (Region region : regions) {
             if (region.contains(location)) {
-                found = region;
-                break;
+                // Calculate volume - smaller = higher priority
+                int volume = calculateVolume(region);
+                
+                if (volume < smallestVolume) {
+                    smallestVolume = volume;
+                    found = region;
+                }
             }
         }
 
@@ -47,6 +54,17 @@ public class RegionCache {
         cacheTimestamps.put(key, now);
         
         return found;
+    }
+    
+    /**
+     * Calculate region volume for priority
+     * Smaller volume = subclaim = higher priority
+     */
+    private int calculateVolume(Region region) {
+        int width = Math.abs(region.getMaxX() - region.getMinX()) + 1;
+        int height = Math.abs(region.getMaxY() - region.getMinY()) + 1;
+        int depth = Math.abs(region.getMaxZ() - region.getMinZ()) + 1;
+        return width * height * depth;
     }
 
     public List<Region> getAllRegions() {

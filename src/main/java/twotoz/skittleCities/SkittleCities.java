@@ -6,6 +6,7 @@ import twotoz.skittleCities.data.DatabaseManager;
 import twotoz.skittleCities.gui.HelpGUI;
 import twotoz.skittleCities.gui.MainMenuGUI;
 import twotoz.skittleCities.listeners.ClaimMoveListener;
+import twotoz.skittleCities.listeners.CombatListener;
 import twotoz.skittleCities.listeners.CommandBlockListener;
 import twotoz.skittleCities.listeners.PlayerJoinListener;
 import twotoz.skittleCities.listeners.ProtectionListener;
@@ -27,6 +28,8 @@ public final class SkittleCities extends JavaPlugin {
     private SelectionManager selectionManager;
     private ActionBarManager actionBarManager;
     private InventoryManager inventoryManager;
+    private CombatManager combatManager;
+    private SellSignManager sellSignManager;
     
     private DebugToolCommand debugToolCommand;
     private IgnoreClaimsCommand ignoreClaimsCommand;
@@ -48,6 +51,8 @@ public final class SkittleCities extends JavaPlugin {
         selectionManager = new SelectionManager();
         actionBarManager = new ActionBarManager(this);
         inventoryManager = new InventoryManager(this);
+        combatManager = new CombatManager(this);
+        sellSignManager = new SellSignManager(this);
 
         // Load regions from database
         regionManager.loadRegions();
@@ -82,6 +87,14 @@ public final class SkittleCities extends JavaPlugin {
         getCommand("cmenu").setExecutor(new MenuCommand(this));
         getCommand("leavecity").setExecutor(new LeaveCityCommand(this));
         
+        CreateSellSignCommand sellSignCommand = new CreateSellSignCommand(this);
+        getCommand("csellsign").setExecutor(sellSignCommand);
+        getCommand("csellsign").setTabCompleter(sellSignCommand);
+        
+        getCommand("crename").setExecutor(new RenameClaimCommand(this));
+        getCommand("csubclaim").setExecutor(new CreateSubclaimCommand(this));
+        getCommand("csubclaims").setExecutor(new SubclaimsCommand(this));
+        
         debugToolCommand = new DebugToolCommand(this);
         getCommand("cdebugtool").setExecutor(debugToolCommand);
         
@@ -94,6 +107,7 @@ public final class SkittleCities extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new SignListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
         getServer().getPluginManager().registerEvents(new WorldChangeListener(this), this);
+        getServer().getPluginManager().registerEvents(new CombatListener(this), this);
         getServer().getPluginManager().registerEvents(new MainMenuGUI(this), this);
         getServer().getPluginManager().registerEvents(new HelpGUI(this), this);
         
@@ -142,6 +156,8 @@ public final class SkittleCities extends JavaPlugin {
     public SelectionManager getSelectionManager() { return selectionManager; }
     public ActionBarManager getActionBarManager() { return actionBarManager; }
     public InventoryManager getInventoryManager() { return inventoryManager; }
+    public CombatManager getCombatManager() { return combatManager; }
+    public SellSignManager getSellSignManager() { return sellSignManager; }
     public DebugToolCommand getDebugToolCommand() { return debugToolCommand; }
     public IgnoreClaimsCommand getIgnoreClaimsCommand() { return ignoreClaimsCommand; }
     public ClaimMoveListener getClaimMoveListener() { return claimMoveListener; }

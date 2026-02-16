@@ -35,11 +35,15 @@ public class EconomyCommand implements CommandExecutor, TabCompleter {
         }
 
         String action = args[0].toLowerCase();
-        Player target = plugin.getServer().getPlayer(args[1]);
         
-        if (target == null) {
+        // Support offline players
+        @SuppressWarnings("deprecation")
+        org.bukkit.OfflinePlayer target = plugin.getServer().getOfflinePlayer(args[1]);
+        
+        // Check if player has ever played (valid player)
+        if (!target.hasPlayedBefore() && !target.isOnline()) {
             sender.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                "&cPlayer not found."));
+                "&cPlayer not found. Make sure you typed the name correctly."));
             return true;
         }
 
@@ -52,29 +56,40 @@ public class EconomyCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        String targetName = target.getName() != null ? target.getName() : args[1];
+
         switch (action) {
             case "give":
                 plugin.getEconomyManager().addBalance(target.getUniqueId(), amount);
                 sender.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                    "&aGave &e$" + amount + "&a to &e" + target.getName()));
-                target.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                    "&aYou received &e$" + amount));
+                    "&aGave &e$" + amount + "&a to &e" + targetName));
+                // Only send message if player is online
+                if (target.isOnline() && target.getPlayer() != null) {
+                    target.getPlayer().sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                        "&aYou received &e$" + amount));
+                }
                 break;
 
             case "take":
                 plugin.getEconomyManager().removeBalance(target.getUniqueId(), amount);
                 sender.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                    "&aTook &e$" + amount + "&a from &e" + target.getName()));
-                target.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                    "&c$" + amount + " was removed from your balance"));
+                    "&aTook &e$" + amount + "&a from &e" + targetName));
+                // Only send message if player is online
+                if (target.isOnline() && target.getPlayer() != null) {
+                    target.getPlayer().sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                        "&c$" + amount + " was removed from your balance"));
+                }
                 break;
 
             case "set":
                 plugin.getEconomyManager().setBalance(target.getUniqueId(), amount);
                 sender.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                    "&aSet &e" + target.getName() + "'s&a balance to &e$" + amount));
-                target.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                    "&aYour balance was set to &e$" + amount));
+                    "&aSet &e" + targetName + "'s&a balance to &e$" + amount));
+                // Only send message if player is online
+                if (target.isOnline() && target.getPlayer() != null) {
+                    target.getPlayer().sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                        "&aYour balance was set to &e$" + amount));
+                }
                 break;
 
             default:

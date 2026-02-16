@@ -37,6 +37,7 @@ public class DatabaseManager {
         String regionsTable = "CREATE TABLE IF NOT EXISTS regions (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "name TEXT NOT NULL," +
+                "display_name TEXT," +
                 "world TEXT NOT NULL," +
                 "pos1_x DOUBLE NOT NULL," +
                 "pos1_y DOUBLE NOT NULL," +
@@ -52,7 +53,9 @@ public class DatabaseManager {
                 "auto_extend BOOLEAN NOT NULL," +
                 "sign_x DOUBLE," +
                 "sign_y DOUBLE," +
-                "sign_z DOUBLE" +
+                "sign_z DOUBLE," +
+                "parent_id INTEGER," +
+                "FOREIGN KEY(parent_id) REFERENCES regions(id) ON DELETE CASCADE" +
                 ")";
 
         String flagsTable = "CREATE TABLE IF NOT EXISTS region_flags (" +
@@ -78,6 +81,42 @@ public class DatabaseManager {
             stmt.execute(flagsTable);
             stmt.execute(trustTable);
             stmt.execute(balancesTable);
+            
+            // Migrate existing databases - add new columns if they don't exist
+            migrateDatabase();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Migrate existing databases to add new columns
+     */
+    private void migrateDatabase() {
+        try (Statement stmt = connection.createStatement()) {
+            // Check if display_name column exists
+            ResultSet rs = stmt.executeQuery("PRAGMA table_info(regions)");
+            boolean hasDisplayName = false;
+            boolean hasParentId = false;
+            
+            while (rs.next()) {
+                String columnName = rs.getString("name");
+                if (columnName.equals("display_name")) hasDisplayName = true;
+                if (columnName.equals("parent_id")) hasParentId = true;
+            }
+            rs.close();
+            
+            // Add missing columns
+            if (!hasDisplayName) {
+                plugin.getLogger().info("Adding display_name column to regions table...");
+                stmt.execute("ALTER TABLE regions ADD COLUMN display_name TEXT");
+            }
+            
+            if (!hasParentId) {
+                plugin.getLogger().info("Adding parent_id column to regions table (subclaims)...");
+                stmt.execute("ALTER TABLE regions ADD COLUMN parent_id INTEGER");
+            }
+            
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -85,34 +124,41 @@ public class DatabaseManager {
 
     // Region operations
     public void saveRegion(Region region) {
-        String sql = "INSERT INTO regions (name, world, pos1_x, pos1_y, pos1_z, pos2_x, pos2_y, pos2_z, " +
-                "owner, type, price, lease_days, lease_expiry, auto_extend, sign_x, sign_y, sign_z) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO regions (name, display_name, world, pos1_x, pos1_y, pos1_z, pos2_x, pos2_y, pos2_z, " +
+                "owner, type, price, lease_days, lease_expiry, auto_extend, sign_x, sign_y, sign_z, parent_id) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, region.getName());
-            pstmt.setString(2, region.getWorld().getName());
-            pstmt.setDouble(3, region.getPos1().getX());
-            pstmt.setDouble(4, region.getPos1().getY());
-            pstmt.setDouble(5, region.getPos1().getZ());
-            pstmt.setDouble(6, region.getPos2().getX());
-            pstmt.setDouble(7, region.getPos2().getY());
-            pstmt.setDouble(8, region.getPos2().getZ());
-            pstmt.setString(9, region.getOwner() != null ? region.getOwner().toString() : null);
-            pstmt.setString(10, region.getType().name());
-            pstmt.setDouble(11, region.getPrice());
-            pstmt.setInt(12, region.getLeaseDays());
-            pstmt.setLong(13, region.getLeaseExpiry());
-            pstmt.setBoolean(14, region.isAutoExtend());
+            pstmt.setString(2, region.getDisplayName());
+            pstmt.setString(3, region.getWorld().getName());
+            pstmt.setDouble(4, region.getPos1().getX());
+            pstmt.setDouble(5, region.getPos1().getY());
+            pstmt.setDouble(6, region.getPos1().getZ());
+            pstmt.setDouble(7, region.getPos2().getX());
+            pstmt.setDouble(8, region.getPos2().getY());
+            pstmt.setDouble(9, region.getPos2().getZ());
+            pstmt.setString(10, region.getOwner() != null ? region.getOwner().toString() : null);
+            pstmt.setString(11, region.getType().name());
+            pstmt.setDouble(12, region.getPrice());
+            pstmt.setInt(13, region.getLeaseDays());
+            pstmt.setLong(14, region.getLeaseExpiry());
+            pstmt.setBoolean(15, region.isAutoExtend());
             
             if (region.getSignLocation() != null) {
-                pstmt.setDouble(15, region.getSignLocation().getX());
-                pstmt.setDouble(16, region.getSignLocation().getY());
-                pstmt.setDouble(17, region.getSignLocation().getZ());
+                pstmt.setDouble(16, region.getSignLocation().getX());
+                pstmt.setDouble(17, region.getSignLocation().getY());
+                pstmt.setDouble(18, region.getSignLocation().getZ());
             } else {
-                pstmt.setNull(15, Types.DOUBLE);
                 pstmt.setNull(16, Types.DOUBLE);
                 pstmt.setNull(17, Types.DOUBLE);
+                pstmt.setNull(18, Types.DOUBLE);
+            }
+            
+            if (region.getParentId() != null) {
+                pstmt.setInt(19, region.getParentId());
+            } else {
+                pstmt.setNull(19, Types.INTEGER);
             }
 
             pstmt.executeUpdate();
@@ -130,28 +176,35 @@ public class DatabaseManager {
     }
 
     public void updateRegion(Region region) {
-        String sql = "UPDATE regions SET owner = ?, type = ?, price = ?, lease_days = ?, " +
-                "lease_expiry = ?, auto_extend = ?, sign_x = ?, sign_y = ?, sign_z = ? WHERE id = ?";
+        String sql = "UPDATE regions SET display_name = ?, owner = ?, type = ?, price = ?, lease_days = ?, " +
+                "lease_expiry = ?, auto_extend = ?, sign_x = ?, sign_y = ?, sign_z = ?, parent_id = ? WHERE id = ?";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setString(1, region.getOwner() != null ? region.getOwner().toString() : null);
-            pstmt.setString(2, region.getType().name());
-            pstmt.setDouble(3, region.getPrice());
-            pstmt.setInt(4, region.getLeaseDays());
-            pstmt.setLong(5, region.getLeaseExpiry());
-            pstmt.setBoolean(6, region.isAutoExtend());
+            pstmt.setString(1, region.getDisplayName());
+            pstmt.setString(2, region.getOwner() != null ? region.getOwner().toString() : null);
+            pstmt.setString(3, region.getType().name());
+            pstmt.setDouble(4, region.getPrice());
+            pstmt.setInt(5, region.getLeaseDays());
+            pstmt.setLong(6, region.getLeaseExpiry());
+            pstmt.setBoolean(7, region.isAutoExtend());
             
             if (region.getSignLocation() != null) {
-                pstmt.setDouble(7, region.getSignLocation().getX());
-                pstmt.setDouble(8, region.getSignLocation().getY());
-                pstmt.setDouble(9, region.getSignLocation().getZ());
+                pstmt.setDouble(8, region.getSignLocation().getX());
+                pstmt.setDouble(9, region.getSignLocation().getY());
+                pstmt.setDouble(10, region.getSignLocation().getZ());
             } else {
-                pstmt.setNull(7, Types.DOUBLE);
                 pstmt.setNull(8, Types.DOUBLE);
                 pstmt.setNull(9, Types.DOUBLE);
+                pstmt.setNull(10, Types.DOUBLE);
             }
             
-            pstmt.setInt(10, region.getId());
+            if (region.getParentId() != null) {
+                pstmt.setInt(11, region.getParentId());
+            } else {
+                pstmt.setNull(11, Types.INTEGER);
+            }
+            
+            pstmt.setInt(12, region.getId());
             pstmt.executeUpdate();
 
             // Update flags and trust
@@ -236,6 +289,7 @@ public class DatabaseManager {
     private Region buildRegionFromResultSet(ResultSet rs) throws SQLException {
         int id = rs.getInt("id");
         String name = rs.getString("name");
+        String displayName = rs.getString("display_name");
         World world = plugin.getServer().getWorld(rs.getString("world"));
         
         if (world == null) {
@@ -246,6 +300,7 @@ public class DatabaseManager {
         Location pos2 = new Location(world, rs.getDouble("pos2_x"), rs.getDouble("pos2_y"), rs.getDouble("pos2_z"));
 
         Region region = new Region(id, name, world, pos1, pos2);
+        region.setDisplayName(displayName);
         
         String ownerStr = rs.getString("owner");
         if (ownerStr != null) {
@@ -262,6 +317,11 @@ public class DatabaseManager {
         if (signX != null) {
             Location signLoc = new Location(world, signX, rs.getDouble("sign_y"), rs.getDouble("sign_z"));
             region.setSignLocation(signLoc);
+        }
+        
+        Integer parentId = rs.getObject("parent_id", Integer.class);
+        if (parentId != null) {
+            region.setParentId(parentId);
         }
 
         return region;

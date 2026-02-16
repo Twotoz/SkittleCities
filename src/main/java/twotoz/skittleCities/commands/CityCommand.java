@@ -32,6 +32,14 @@ public class CityCommand implements CommandExecutor {
             return true;
         }
         
+        // Combat cooldown check
+        if (plugin.getCombatManager().isInCombat(player.getUniqueId())) {
+            int remaining = plugin.getCombatManager().getRemainingCombatTime(player.getUniqueId());
+            player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                "&cYou are in combat! Wait &e" + remaining + " &cseconds before teleporting."));
+            return true;
+        }
+        
         World cityWorld = plugin.getServer().getWorld(worldName);
 
         if (cityWorld == null) {

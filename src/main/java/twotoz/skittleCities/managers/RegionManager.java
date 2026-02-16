@@ -54,11 +54,44 @@ public class RegionManager {
 
     public boolean hasOverlap(Region newRegion) {
         for (Region existing : regions) {
+            // Skip if same region
+            if (existing.getId() == newRegion.getId()) continue;
+            
+            // Allow if new region is subclaim of existing (completely inside)
+            boolean isSubclaimOfExisting = isCompletelyInside(newRegion, existing);
+            
+            // Allow if existing is subclaim of new region (new is parent)
+            boolean existingIsSubclaimOfNew = isCompletelyInside(existing, newRegion);
+            
+            // Allow if both are subclaims of same parent (volume priority will handle it)
+            if (newRegion.getParentId() != null && existing.getParentId() != null && 
+                newRegion.getParentId().equals(existing.getParentId())) {
+                continue; // Both are subclaims of same parent - OK
+            }
+            
+            // Allow if it's a subclaim/parent relationship
+            if (isSubclaimOfExisting || existingIsSubclaimOfNew) {
+                continue; // This is OK - it's a subclaim/parent relationship
+            }
+            
+            // Check for partial overlap (not allowed)
             if (existing.overlaps(newRegion)) {
-                return true;
+                return true; // Partial overlap = BAD
             }
         }
         return false;
+    }
+    
+    /**
+     * Check if region A is completely inside region B
+     */
+    private boolean isCompletelyInside(Region inner, Region outer) {
+        return inner.getMinX() >= outer.getMinX() &&
+               inner.getMaxX() <= outer.getMaxX() &&
+               inner.getMinY() >= outer.getMinY() &&
+               inner.getMaxY() <= outer.getMaxY() &&
+               inner.getMinZ() >= outer.getMinZ() &&
+               inner.getMaxZ() <= outer.getMaxZ();
     }
 
     public void handleLeaseExpiry(Region region) {
@@ -98,6 +131,14 @@ public class RegionManager {
     }
 
     public void deleteRegion(Region region) {
+        // CASCADE DELETE: Remove all subclaims first
+        List<Region> subclaims = getSubclaims(region.getId());
+        for (Region subclaim : subclaims) {
+            regions.remove(subclaim);
+            plugin.getDatabaseManager().deleteRegion(subclaim.getId());
+        }
+        
+        // Remove the region itself
         regions.remove(region);
         plugin.getDatabaseManager().deleteRegion(region.getId());
         regionCache.setRegions(regions);
@@ -106,6 +147,33 @@ public class RegionManager {
         if (region.getSignLocation() != null) {
             region.getSignLocation().getBlock().setType(org.bukkit.Material.AIR);
         }
+    }
+    
+    /**
+     * Get all subclaims of a parent claim
+     */
+    public List<Region> getSubclaims(int parentId) {
+        List<Region> subclaims = new ArrayList<>();
+        for (Region region : regions) {
+            if (region.getParentId() != null && region.getParentId() == parentId) {
+                subclaims.add(region);
+            }
+        }
+        return subclaims;
+    }
+    
+    /**
+     * Get parent claim of a subclaim
+     */
+    public Region getParentClaim(Region subclaim) {
+        if (subclaim.getParentId() == null) return null;
+        
+        for (Region region : regions) {
+            if (region.getId() == subclaim.getParentId()) {
+                return region;
+            }
+        }
+        return null;
     }
 
     private void createRegionSign(Region region) {

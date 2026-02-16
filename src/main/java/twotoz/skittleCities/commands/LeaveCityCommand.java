@@ -31,6 +31,14 @@ public class LeaveCityCommand implements CommandExecutor {
             return true;
         }
 
+        // Combat cooldown check
+        if (plugin.getCombatManager().isInCombat(player.getUniqueId())) {
+            int remaining = plugin.getCombatManager().getRemainingCombatTime(player.getUniqueId());
+            player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                "&cYou are in combat! Wait &e" + remaining + " &cseconds before teleporting."));
+            return true;
+        }
+
         // Teleport to server spawn (default world spawn)
         Location spawn = plugin.getServer().getWorlds().get(0).getSpawnLocation();
         player.teleport(spawn);

@@ -45,9 +45,29 @@ public class DebugToolCommand implements CommandExecutor {
             MessageUtil.send(player, plugin.getConfig(), "debug-tool-disabled");
         } else {
             // Enable - Folia compatible
+            // Only render claims within view distance for performance
+            final int viewDistance = plugin.getConfig().getInt("debug-view-distance", 128);
+            
             Runnable task = () -> {
+                // Get player location for distance check
+                org.bukkit.Location playerLoc = player.getLocation();
+                int playerX = playerLoc.getBlockX();
+                int playerZ = playerLoc.getBlockZ();
+                
                 for (Region region : plugin.getRegionManager().getAllRegions()) {
-                    if (region.getWorld().equals(player.getWorld())) {
+                    // Skip if different world
+                    if (!region.getWorld().equals(player.getWorld())) continue;
+                    
+                    // Calculate distance to region center
+                    int regionCenterX = (region.getMinX() + region.getMaxX()) / 2;
+                    int regionCenterZ = (region.getMinZ() + region.getMaxZ()) / 2;
+                    
+                    int deltaX = playerX - regionCenterX;
+                    int deltaZ = playerZ - regionCenterZ;
+                    double distance = Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
+                    
+                    // Only render if within view distance
+                    if (distance <= viewDistance) {
                         ParticleUtil.visualizeRegion(player, region);
                     }
                 }

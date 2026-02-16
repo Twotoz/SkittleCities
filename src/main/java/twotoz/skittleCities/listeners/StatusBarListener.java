@@ -98,20 +98,38 @@ public class StatusBarListener implements Listener {
         // Claim info
         Region region = plugin.getRegionManager().getRegionAt(player.getLocation());
         if (region != null) {
-            String ownerName;
-            if (region.getOwner() != null) {
-                if (region.getOwner().equals(playerId)) {
-                    ownerName = "Your claim";
-                } else {
-                    ownerName = plugin.getServer().getOfflinePlayer(region.getOwner()).getName();
-                    if (ownerName == null) ownerName = "Unknown";
-                    ownerName += "'s claim";
-                }
-            } else {
-                ownerName = "Unclaimed";
-            }
+            // Show claim name (display name if available)
+            String claimName = region.getDisplayName() != null ? region.getDisplayName() : region.getName();
             
-            status.append(MessageUtil.colorize("&7")).append(ownerName);
+            // Check if subclaim
+            if (region.isSubclaim()) {
+                Region parent = plugin.getRegionManager().getParentClaim(region);
+                String parentName = parent != null && parent.getDisplayName() != null ? 
+                    parent.getDisplayName() : (parent != null ? parent.getName() : "Unknown");
+                
+                // Show as "Subclaim (Parent)"
+                status.append(MessageUtil.colorize("&e")).append(claimName);
+                status.append(MessageUtil.colorize(" &8(&7")).append(parentName).append(MessageUtil.colorize("&8)"));
+            } else {
+                // Regular claim
+                String ownerName;
+                if (region.getOwner() != null) {
+                    if (region.getOwner().equals(playerId)) {
+                        ownerName = "Your claim";
+                    } else {
+                        ownerName = plugin.getServer().getOfflinePlayer(region.getOwner()).getName();
+                        if (ownerName == null) ownerName = "Unknown";
+                        ownerName += "'s claim";
+                    }
+                } else {
+                    ownerName = "Unclaimed";
+                }
+                
+                status.append(MessageUtil.colorize("&7")).append(ownerName);
+                if (region.getDisplayName() != null) {
+                    status.append(MessageUtil.colorize(" &8(&e")).append(claimName).append(MessageUtil.colorize("&8)"));
+                }
+            }
             
             boolean pvp = plugin.getFlagManager().getClaimFlag(region, "pvp");
             status.append(MessageUtil.colorize(" &8| &7PVP: ")).append(pvp ? "&aON" : "&cOFF");

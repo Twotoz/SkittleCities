@@ -51,10 +51,14 @@ public class TrustCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        Player target = plugin.getServer().getPlayer(args[0]);
-        if (target == null) {
+        // Support offline players
+        @SuppressWarnings("deprecation")
+        org.bukkit.OfflinePlayer target = plugin.getServer().getOfflinePlayer(args[0]);
+        
+        // Check if player has ever played (valid player)
+        if (!target.hasPlayedBefore() && !target.isOnline()) {
             player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                "&cPlayer not found."));
+                "&cPlayer not found. Make sure you typed the name correctly."));
             return true;
         }
 
@@ -65,16 +69,18 @@ public class TrustCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        String targetName = target.getName() != null ? target.getName() : args[0];
+        
         if (plugin.getTrustManager().trustPlayer(region, target.getUniqueId())) {
             MessageUtil.send(player, plugin.getConfig(), "player-trusted",
                 new String[]{"%player%"},
-                new String[]{target.getName()});
+                new String[]{targetName});
             player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                "&7Use &e/cuntrust " + target.getName() + " &7to remove access"));
+                "&7Use &e/cuntrust " + targetName + " &7to remove access"));
         } else {
             MessageUtil.send(player, plugin.getConfig(), "already-trusted",
                 new String[]{"%player%"},
-                new String[]{target.getName()});
+                new String[]{targetName});
         }
 
         return true;

@@ -93,6 +93,26 @@ commands:
     usage: /citycommandbypass
     permission: skittlecities.commandbypass
     aliases: [ccbypass]
+    
+  csellsign:
+    description: Create a sell sign (admin only)
+    usage: /csellsign <material> <price>
+    permission: skittlecities.admin
+    
+  crename:
+    description: Rename your claim
+    usage: /crename <name>
+    permission: skittlecities.rename
+    
+  csubclaim:
+    
+  csubclaims:
+    description: List subclaims of your claim
+    usage: /csubclaims
+    permission: skittlecities.subclaim
+    description: Create a subclaim within your claim
+    usage: /csubclaim <name>
+    permission: skittlecities.subclaim
 
 permissions:
   skittlecities.admin:
@@ -103,6 +123,9 @@ permissions:
       skittlecities.trust: true
       skittlecities.debug: true
       skittlecities.commandbypass: true
+      skittlecities.balance.others: true
+      skittlecities.rename: true
+      skittlecities.subclaim: true
       
   skittlecities.player:
     description: Basic player permissions
@@ -111,6 +134,18 @@ permissions:
   skittlecities.trust:
     description: Allows trusting/untrusting players
     default: true
+    
+  skittlecities.rename:
+    description: Allows renaming owned claims
+    default: true
+    
+  skittlecities.subclaim:
+    description: Allows creating subclaims within owned claims
+    default: true
+    
+  skittlecities.balance.others:
+    description: Allows viewing other players' balances
+    default: op
     
   skittlecities.debug:
     description: Allows using debug visualization
