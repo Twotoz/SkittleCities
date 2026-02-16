@@ -1,14 +1,25 @@
 # SkittleCities Configuration
 
 # World where the plugin is active
-world-name: city
+world-name: City
 
 # City spawn location (set with /setcityspawn)
 city-spawn:
-  world: city
-  x: 0
-  y: 64
-  z: 0
+  world: City
+  x: -4.5
+  y: 1
+  z: -6.5
+  yaw: 0
+  pitch: 0
+
+# Leave-city spawn location (set with /setleavespawn)
+# Players using /leavecity will teleport here
+# If not configured, players will go to server spawn
+leave-city-spawn:
+  world: spawn
+  x: 44
+  y: 72
+  z: -33
   yaw: 0
   pitch: 0
 

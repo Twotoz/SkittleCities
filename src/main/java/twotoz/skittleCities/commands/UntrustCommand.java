@@ -34,11 +34,6 @@ public class UntrustCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (!player.hasPermission("skittlecities.trust")) {
-            MessageUtil.send(player, plugin.getConfig(), "no-permission");
-            return true;
-        }
-
         if (args.length != 1) {
             player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
                 "&cUsage: /cuntrust <player>"));
@@ -52,7 +47,11 @@ public class UntrustCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (region.getOwner() == null || !region.getOwner().equals(player.getUniqueId())) {
+        // Check if player is owner OR has admin permission
+        boolean isOwner = region.getOwner() != null && region.getOwner().equals(player.getUniqueId());
+        boolean hasAdminPerm = player.hasPermission("skittlecities.admintrust");
+        
+        if (!isOwner && !hasAdminPerm) {
             MessageUtil.send(player, plugin.getConfig(), "not-claim-owner");
             return true;
         }

@@ -22,14 +22,12 @@ commands:
     permission: skittlecities.admin
     
   ctrust:
-    description: Trust a player in your claim
+    description: Trust a player in your claim (claim owners can use this, admins can use in any claim)
     usage: /ctrust <player>
-    permission: skittlecities.trust
     
   cuntrust:
-    description: Untrust a player from your claim
+    description: Untrust a player from your claim (claim owners can use this, admins can use in any claim)
     usage: /cuntrust <player>
-    permission: skittlecities.trust
     
   cbal:
     description: Check your balance
@@ -76,6 +74,11 @@ commands:
   setcityspawn:
     description: Set the city spawn location
     usage: /setcityspawn
+    permission: skittlecities.admin
+    
+  setleavespawn:
+    description: Set the spawn location for /leavecity command
+    usage: /setleavespawn
     permission: skittlecities.admin
     
   ceconomy:
@@ -135,18 +138,19 @@ permissions:
     default: op
     children:
       skittlecities.player: true
-      skittlecities.trust: true
+      skittlecities.admintrust: true
       skittlecities.debug: true
       skittlecities.commandbypass: true
       skittlecities.balance.others: true
+      skittlecities.fly: true
       
   skittlecities.player:
     description: Basic player permissions
     default: true
     
-  skittlecities.trust:
-    description: Allows trusting/untrusting players
-    default: true
+  skittlecities.admintrust:
+    description: Allows trusting/untrusting players in ANY claim (admin override - claim owners can always trust in their own claims)
+    default: op
     
   skittlecities.balance.others:
     description: Allows viewing other players' balances
@@ -158,4 +162,8 @@ permissions:
     
   skittlecities.commandbypass:
     description: Allows bypassing city command restrictions
+    default: op
+    
+  skittlecities.fly:
+    description: Allows flying in the city world
     default: op

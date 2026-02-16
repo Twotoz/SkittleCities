@@ -41,8 +41,31 @@ public class LeaveCityCommand implements CommandExecutor {
             return true;
         }
 
-        // Teleport to server spawn (default world spawn)
-        Location spawn = plugin.getServer().getWorlds().get(0).getSpawnLocation();
+        // Teleport to configured leave-city spawn (or server spawn as fallback)
+        Location spawn;
+        
+        if (plugin.getConfig().contains("leave-city-spawn.world")) {
+            // Use configured leave-city spawn
+            String worldName = plugin.getConfig().getString("leave-city-spawn.world");
+            org.bukkit.World world = plugin.getServer().getWorld(worldName);
+            
+            if (world != null) {
+                double x = plugin.getConfig().getDouble("leave-city-spawn.x");
+                double y = plugin.getConfig().getDouble("leave-city-spawn.y");
+                double z = plugin.getConfig().getDouble("leave-city-spawn.z");
+                float yaw = (float) plugin.getConfig().getDouble("leave-city-spawn.yaw");
+                float pitch = (float) plugin.getConfig().getDouble("leave-city-spawn.pitch");
+                
+                spawn = new Location(world, x, y, z, yaw, pitch);
+            } else {
+                // World not found - fallback to server spawn
+                spawn = plugin.getServer().getWorlds().get(0).getSpawnLocation();
+            }
+        } else {
+            // No leave-city spawn configured - use server spawn
+            spawn = plugin.getServer().getWorlds().get(0).getSpawnLocation();
+        }
+        
         player.teleport(spawn);
         
         player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 

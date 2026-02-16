@@ -8,6 +8,7 @@ import twotoz.skittleCities.gui.MainMenuGUI;
 import twotoz.skittleCities.listeners.ClaimMoveListener;
 import twotoz.skittleCities.listeners.CombatListener;
 import twotoz.skittleCities.listeners.CommandBlockListener;
+import twotoz.skittleCities.listeners.FlyBlockListener;
 import twotoz.skittleCities.listeners.MenuItemListener;
 import twotoz.skittleCities.listeners.PlayerJoinListener;
 import twotoz.skittleCities.listeners.ProtectionListener;
@@ -80,6 +81,7 @@ public final class SkittleCities extends JavaPlugin {
         
         getCommand("city").setExecutor(new CityCommand(this));
         getCommand("setcityspawn").setExecutor(new SetCitySpawnCommand(this));
+        getCommand("setleavespawn").setExecutor(new SetLeaveSpawnCommand(this));
         
         EconomyCommand economyCommand = new EconomyCommand(this);
         getCommand("ceconomy").setExecutor(economyCommand);
@@ -122,6 +124,10 @@ public final class SkittleCities extends JavaPlugin {
         
         menuItemListener = new MenuItemListener(this);
         getServer().getPluginManager().registerEvents(menuItemListener, this);
+        
+        FlyBlockListener flyBlockListener = new FlyBlockListener(this);
+        getServer().getPluginManager().registerEvents(flyBlockListener, this);
+        flyBlockListener.startPeriodicCheck(); // Start 30-second check
         
         commandBlockListener = new CommandBlockListener(this);
         getServer().getPluginManager().registerEvents(commandBlockListener, this);
