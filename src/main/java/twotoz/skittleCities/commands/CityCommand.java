@@ -24,6 +24,14 @@ public class CityCommand implements CommandExecutor {
         }
 
         String worldName = plugin.getConfig().getString("world-name");
+        
+        // Check if already in city
+        if (player.getWorld().getName().equals(worldName)) {
+            player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                "&cYou are already in the city!"));
+            return true;
+        }
+        
         World cityWorld = plugin.getServer().getWorld(worldName);
 
         if (cityWorld == null) {

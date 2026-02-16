@@ -62,6 +62,17 @@ commands:
     permission: skittlecities.player
     aliases: [cspawn]
     
+  leavecity:
+    description: Leave the city and return to server spawn
+    usage: /leavecity
+    permission: skittlecities.player
+    
+  cmenu:
+    description: Open the main menu
+    usage: /cmenu
+    permission: skittlecities.player
+    aliases: [menu]
+    
   setcityspawn:
     description: Set the city spawn location
     usage: /setcityspawn

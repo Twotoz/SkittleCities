@@ -19,6 +19,9 @@ allowed-commands-in-city:
   - help
   - city
   - cspawn
+  - leavecity
+  - cmenu
+  - menu
   - ctool
   - cregioncreate
   - cflags
@@ -53,6 +56,8 @@ default-world-flags:
   block-break: false
   block-place: false
   mob-spawning: false
+  plant-growth: true      # Crops, saplings, vines growing
+  trampling: true         # Farmland trampling
   entity-damage: true
   use-doors: true
   use-buttons: true
@@ -62,11 +67,14 @@ default-world-flags:
   fire-spread: false
 
 # Default claim flags (applied to new claims)
+# CLAIM FLAGS ALWAYS OVERRIDE WORLD FLAGS
 default-claim-flags:
   pvp: false
   block-break: true  # Owner and trusted can break
   block-place: true  # Owner and trusted can place
   mob-spawning: false
+  plant-growth: true      # Crops, saplings, vines growing
+  trampling: false        # Prevent farmland trampling
   entity-damage: true
   use-doors: true
   use-buttons: true
