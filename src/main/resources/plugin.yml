@@ -95,8 +95,13 @@ commands:
     aliases: [ccbypass]
     
   csellsign:
-    description: Create a sell sign (admin only)
+    description: Create a SELL sign where players can BUY items from the server (admin only)
     usage: /csellsign <material> <price>
+    permission: skittlecities.admin
+    
+  cbuysign:
+    description: Create a BUY sign where players can SELL items to the server (admin only)
+    usage: /cbuysign <material> <price>
     permission: skittlecities.admin
     
   crename:

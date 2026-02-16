@@ -19,7 +19,7 @@ import java.util.Arrays;
 public class MenuItemListener implements Listener {
     private final SkittleCities plugin;
     private static final String MENU_ITEM_NAME = "§6§lCity Menu";
-    private static final Material MENU_ITEM_TYPE = Material.COMPASS;
+    private static final Material MENU_ITEM_TYPE = Material.NETHER_STAR;
 
     public MenuItemListener(SkittleCities plugin) {
         this.plugin = plugin;
@@ -121,6 +121,13 @@ public class MenuItemListener implements Listener {
             MainMenuGUI menu = new MainMenuGUI(plugin);
             menu.open(player);
         }
+    }
+
+    /**
+     * Give menu item to player if they don't have it (PUBLIC - called from commands)
+     */
+    public void giveMenuItemIfNeeded(Player player) {
+        giveMenuItem(player);
     }
 
     /**

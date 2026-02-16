@@ -60,6 +60,11 @@ public class CityCommand implements CommandExecutor {
         org.bukkit.Location spawn = new org.bukkit.Location(cityWorld, x, y, z, yaw, pitch);
         player.teleport(spawn);
         
+        // Give menu item after teleport (delayed 1 tick to ensure world is loaded)
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            plugin.getMenuItemListener().giveMenuItemIfNeeded(player);
+        }, 1L);
+        
         player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
             "&aWelcome to the city!"));
 

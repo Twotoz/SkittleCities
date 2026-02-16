@@ -37,6 +37,7 @@ public final class SkittleCities extends JavaPlugin {
     private ClaimMoveListener claimMoveListener;
     private CommandBlockListener commandBlockListener;
     private StatusBarListener statusBarListener;
+    private MenuItemListener menuItemListener;
 
     @Override
     public void onEnable() {
@@ -92,6 +93,10 @@ public final class SkittleCities extends JavaPlugin {
         getCommand("csellsign").setExecutor(sellSignCommand);
         getCommand("csellsign").setTabCompleter(sellSignCommand);
         
+        CreateBuySignCommand buySignCommand = new CreateBuySignCommand(this);
+        getCommand("cbuysign").setExecutor(buySignCommand);
+        getCommand("cbuysign").setTabCompleter(buySignCommand);
+        
         getCommand("crename").setExecutor(new RenameClaimCommand(this));
         getCommand("csubclaim").setExecutor(new CreateSubclaimCommand(this));
         getCommand("csubclaims").setExecutor(new SubclaimsCommand(this));
@@ -114,7 +119,9 @@ public final class SkittleCities extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CombatListener(this), this);
         getServer().getPluginManager().registerEvents(new MainMenuGUI(this), this);
         getServer().getPluginManager().registerEvents(new HelpGUI(this), this);
-        getServer().getPluginManager().registerEvents(new MenuItemListener(this), this);
+        
+        menuItemListener = new MenuItemListener(this);
+        getServer().getPluginManager().registerEvents(menuItemListener, this);
         
         commandBlockListener = new CommandBlockListener(this);
         getServer().getPluginManager().registerEvents(commandBlockListener, this);
@@ -168,4 +175,5 @@ public final class SkittleCities extends JavaPlugin {
     public ClaimMoveListener getClaimMoveListener() { return claimMoveListener; }
     public CommandBlockListener getCommandBlockListener() { return commandBlockListener; }
     public StatusBarListener getStatusBarListener() { return statusBarListener; }
+    public MenuItemListener getMenuItemListener() { return menuItemListener; }
 }

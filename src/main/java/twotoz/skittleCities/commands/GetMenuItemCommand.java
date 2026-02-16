@@ -27,7 +27,7 @@ public class GetMenuItemCommand implements CommandExecutor {
         }
 
         // Create menu item
-        ItemStack menuItem = new ItemStack(Material.COMPASS);
+        ItemStack menuItem = new ItemStack(Material.NETHER_STAR);
         ItemMeta meta = menuItem.getItemMeta();
         
         if (meta != null) {

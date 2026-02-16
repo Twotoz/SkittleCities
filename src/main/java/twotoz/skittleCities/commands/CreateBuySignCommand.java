@@ -16,10 +16,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class CreateSellSignCommand implements CommandExecutor, TabCompleter {
+public class CreateBuySignCommand implements CommandExecutor, TabCompleter {
     private final SkittleCities plugin;
 
-    public CreateSellSignCommand(SkittleCities plugin) {
+    public CreateBuySignCommand(SkittleCities plugin) {
         this.plugin = plugin;
     }
 
@@ -42,8 +42,9 @@ public class CreateSellSignCommand implements CommandExecutor, TabCompleter {
 
         if (args.length != 2) {
             player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                "&cUsage: /csellsign <material> <price>"));
-            player.sendMessage(MessageUtil.colorize("&7Example: /csellsign COOKED_PORKCHOP 5.00"));
+                "&cUsage: /cbuysign <material> <price>"));
+            player.sendMessage(MessageUtil.colorize("&7Example: /cbuysign ROTTEN_FLESH 0.50"));
+            player.sendMessage(MessageUtil.colorize("&7This creates a sign where players can SELL items to the server!"));
             return true;
         }
 
@@ -84,13 +85,13 @@ public class CreateSellSignCommand implements CommandExecutor, TabCompleter {
 
         Sign sign = (Sign) targetBlock.getState();
         
-        // Create SELL sign - Server SELLS to players (players BUY from server)
-        plugin.getSellSignManager().createSign(sign, material, price, false);
+        // Create BUY sign - Server BUYS from players (players SELL to server)
+        plugin.getSellSignManager().createSign(sign, material, price, true);
         
         player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-            "&aCreated [SELL] sign for &e" + material.name().toLowerCase().replace("_", " ") + 
+            "&aCreated [BUY] sign for &e" + material.name().toLowerCase().replace("_", " ") + 
             " &aat &6$" + String.format("%.2f", price) + " &aeach!"));
-        player.sendMessage(MessageUtil.colorize("&7Players can right-click to buy items!"));
+        player.sendMessage(MessageUtil.colorize("&7Players can right-click to sell their items!"));
 
         return true;
     }
@@ -106,7 +107,7 @@ public class CreateSellSignCommand implements CommandExecutor, TabCompleter {
                 .limit(50)
                 .collect(Collectors.toList());
         } else if (args.length == 2) {
-            return Arrays.asList("1.00", "5.00", "10.00", "25.00", "50.00");
+            return Arrays.asList("0.50", "1.00", "2.00", "5.00", "10.00");
         }
         return new ArrayList<>();
     }
