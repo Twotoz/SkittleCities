@@ -44,6 +44,9 @@ public class SignListener implements Listener {
         if (region == null) return;
         if (region.getOwner() != null) return; // Already owned
 
+        // IMPORTANT: Cancel event to prevent sign editor from opening
+        event.setCancelled(true);
+
         double price = region.getPrice();
 
         // Check balance
