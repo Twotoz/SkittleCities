@@ -42,6 +42,28 @@ public class RegionManager {
     public void updateRegion(Region region) {
         plugin.getDatabaseManager().updateRegion(region);
         regionCache.invalidateAll(); // Invalidate cache when region updates
+        
+        // If this is a parent claim and owner changed, update all subclaims
+        if (!region.isSubclaim()) {
+            updateSubclaimOwners(region);
+        }
+    }
+    
+    /**
+     * Update all subclaim owners to match parent owner
+     */
+    private void updateSubclaimOwners(Region parentRegion) {
+        for (Region region : getAllRegions()) {
+            if (region.isSubclaim() && region.getParentId() != null && 
+                region.getParentId().equals(parentRegion.getId())) {
+                // This is a subclaim of the parent - sync owner
+                if (!java.util.Objects.equals(region.getOwner(), parentRegion.getOwner())) {
+                    region.setOwner(parentRegion.getOwner());
+                    plugin.getDatabaseManager().updateRegion(region);
+                }
+            }
+        }
+        regionCache.invalidateAll();
     }
 
     public Region getRegionAt(Location location) {

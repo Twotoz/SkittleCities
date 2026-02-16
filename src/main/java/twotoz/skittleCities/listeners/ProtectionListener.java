@@ -17,6 +17,8 @@ import twotoz.skittleCities.SkittleCities;
 import twotoz.skittleCities.data.Region;
 import twotoz.skittleCities.utils.MessageUtil;
 
+import java.util.UUID;
+
 public class ProtectionListener implements Listener {
     private final SkittleCities plugin;
 
@@ -46,17 +48,27 @@ public class ProtectionListener implements Listener {
         Region region = plugin.getRegionManager().getRegionAt(event.getBlock().getLocation());
 
         if (region != null) {
-            // IN A CLAIM
-            // Check if player has access (owner or trusted)
-            if (plugin.getTrustManager().hasAccess(region, player.getUniqueId())) {
-                // OWNER/TRUSTED = ALWAYS ALLOWED (ignore flags!)
-                return;
-            }
+            // IN A CLAIM - get the effective owner (parent owner for subclaims)
+            UUID effectiveOwner = getEffectiveOwner(region);
             
-            // NOT owner/trusted - check flag
-            if (!plugin.getFlagManager().getClaimFlag(region, "block-break")) {
-                event.setCancelled(true);
-                MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
+            if (effectiveOwner == null) {
+                // NO OWNER (unclaimed) - check flag
+                if (!plugin.getFlagManager().getClaimFlag(region, "block-break")) {
+                    event.setCancelled(true);
+                    MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
+                }
+            } else {
+                // HAS OWNER - check if player has access
+                if (hasAccessToParent(region, player.getUniqueId())) {
+                    // Owner/Trusted = ALWAYS ALLOWED
+                    return;
+                }
+                
+                // NOT owner/trusted - check flag
+                if (!plugin.getFlagManager().getClaimFlag(region, "block-break")) {
+                    event.setCancelled(true);
+                    MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
+                }
             }
         } else {
             // OUTSIDE claims (wilderness)
@@ -77,17 +89,27 @@ public class ProtectionListener implements Listener {
         Region region = plugin.getRegionManager().getRegionAt(event.getBlock().getLocation());
 
         if (region != null) {
-            // IN A CLAIM
-            // Check if player has access (owner or trusted)
-            if (plugin.getTrustManager().hasAccess(region, player.getUniqueId())) {
-                // OWNER/TRUSTED = ALWAYS ALLOWED (ignore flags!)
-                return;
-            }
+            // IN A CLAIM - get the effective owner
+            UUID effectiveOwner = getEffectiveOwner(region);
             
-            // NOT owner/trusted - check flag
-            if (!plugin.getFlagManager().getClaimFlag(region, "block-place")) {
-                event.setCancelled(true);
-                MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
+            if (effectiveOwner == null) {
+                // NO OWNER - check flag
+                if (!plugin.getFlagManager().getClaimFlag(region, "block-place")) {
+                    event.setCancelled(true);
+                    MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
+                }
+            } else {
+                // HAS OWNER - check if player has access
+                if (hasAccessToParent(region, player.getUniqueId())) {
+                    // Owner/Trusted = ALWAYS ALLOWED
+                    return;
+                }
+                
+                // NOT owner/trusted - check flag
+                if (!plugin.getFlagManager().getClaimFlag(region, "block-place")) {
+                    event.setCancelled(true);
+                    MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
+                }
             }
         } else {
             // OUTSIDE claims
@@ -109,15 +131,19 @@ public class ProtectionListener implements Listener {
 
         if (region != null) {
             // IN A CLAIM
-            // Check if player has access (owner or trusted)
-            if (plugin.getTrustManager().hasAccess(region, player.getUniqueId())) {
-                // OWNER/TRUSTED = ALWAYS ALLOWED
-                return;
-            }
+            UUID effectiveOwner = getEffectiveOwner(region);
             
-            // NOT owner/trusted - block sign editing
-            event.setCancelled(true);
-            MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
+            if (effectiveOwner == null) {
+                // NO OWNER - block sign editing
+                event.setCancelled(true);
+                MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
+            } else {
+                // HAS OWNER - only owner/trusted can edit signs
+                if (!hasAccessToParent(region, player.getUniqueId())) {
+                    event.setCancelled(true);
+                    MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
+                }
+            }
         } else {
             // OUTSIDE claims - check world flag
             if (!plugin.getFlagManager().getWorldFlag("block-place")) {
@@ -144,13 +170,14 @@ public class ProtectionListener implements Listener {
 
             if (region != null) {
                 // IN CLAIM
-                // Check if player has access (owner or trusted)
-                if (plugin.getTrustManager().hasAccess(region, player.getUniqueId())) {
-                    // OWNER/TRUSTED = ALWAYS ALLOWED
+                UUID effectiveOwner = getEffectiveOwner(region);
+                
+                if (effectiveOwner != null && hasAccessToParent(region, player.getUniqueId())) {
+                    // Owner/Trusted = ALWAYS ALLOWED
                     return;
                 }
                 
-                // NOT owner/trusted - check flag
+                // Check flag
                 if (!plugin.getFlagManager().getClaimFlag(region, "trampling")) {
                     event.setCancelled(true);
                     return;
@@ -175,16 +202,26 @@ public class ProtectionListener implements Listener {
 
         if (region != null) {
             // IN A CLAIM
-            // Check if player has access (owner or trusted)
-            if (plugin.getTrustManager().hasAccess(region, player.getUniqueId())) {
-                // OWNER/TRUSTED = ALWAYS ALLOWED (all interactions)
-                return;
-            }
+            UUID effectiveOwner = getEffectiveOwner(region);
             
-            // NOT owner/trusted - check flag for this interaction type
-            if (!plugin.getFlagManager().getClaimFlag(region, interactionType)) {
-                event.setCancelled(true);
-                MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
+            if (effectiveOwner == null) {
+                // NO OWNER - check flag
+                if (!plugin.getFlagManager().getClaimFlag(region, interactionType)) {
+                    event.setCancelled(true);
+                    MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
+                }
+            } else {
+                // HAS OWNER - check if player has access
+                if (hasAccessToParent(region, player.getUniqueId())) {
+                    // Owner/Trusted = ALWAYS ALLOWED
+                    return;
+                }
+                
+                // NOT owner/trusted - check flag
+                if (!plugin.getFlagManager().getClaimFlag(region, interactionType)) {
+                    event.setCancelled(true);
+                    MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
+                }
             }
         } else {
             // OUTSIDE claims - check world flag
@@ -199,16 +236,19 @@ public class ProtectionListener implements Listener {
     public void onEntityDamage(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player attacker)) return;
         if (!(event.getEntity() instanceof Player victim)) return;
-
+        
         if (!isInConfiguredWorld(attacker)) return;
+        if (plugin.getIgnoreClaimsCommand().isBypassing(attacker.getUniqueId())) return;
 
         Region region = plugin.getRegionManager().getRegionAt(victim.getLocation());
 
         if (region != null) {
+            // IN A CLAIM - check PVP flag
             if (!plugin.getFlagManager().getClaimFlag(region, "pvp")) {
                 event.setCancelled(true);
             }
         } else {
+            // OUTSIDE claims - check world PVP
             if (!plugin.getFlagManager().getWorldFlag("pvp")) {
                 event.setCancelled(true);
             }
@@ -217,17 +257,21 @@ public class ProtectionListener implements Listener {
 
     @EventHandler
     public void onEntitySpawn(EntitySpawnEvent event) {
-        if (!isInConfiguredWorld(event.getLocation())) return;
+        // Only check for mobs
+        if (event.getEntity() instanceof Player) return;
+        
+        String worldName = plugin.getConfig().getString("world-name");
+        if (!event.getLocation().getWorld().getName().equals(worldName)) return;
 
         Region region = plugin.getRegionManager().getRegionAt(event.getLocation());
 
         if (region != null) {
-            // IN CLAIM - claim flag has priority
+            // IN A CLAIM - check mob-spawning flag
             if (!plugin.getFlagManager().getClaimFlag(region, "mob-spawning")) {
                 event.setCancelled(true);
             }
         } else {
-            // OUTSIDE claims - use world flag
+            // OUTSIDE claims - check world flag
             if (!plugin.getFlagManager().getWorldFlag("mob-spawning")) {
                 event.setCancelled(true);
             }
@@ -235,96 +279,121 @@ public class ProtectionListener implements Listener {
     }
 
     @EventHandler
-    public void onBlockGrow(org.bukkit.event.block.BlockGrowEvent event) {
-        // Crops, saplings, vines, etc.
-        if (!isInConfiguredWorld(event.getBlock().getLocation())) return;
+    public void onBlockSpread(BlockSpreadEvent event) {
+        String worldName = plugin.getConfig().getString("world-name");
+        if (!event.getBlock().getWorld().getName().equals(worldName)) return;
 
         Region region = plugin.getRegionManager().getRegionAt(event.getBlock().getLocation());
 
         if (region != null) {
-            // IN CLAIM - claim flag has priority
-            if (!plugin.getFlagManager().getClaimFlag(region, "plant-growth")) {
+            // IN A CLAIM
+            if (!plugin.getFlagManager().getClaimFlag(region, "block-spread")) {
                 event.setCancelled(true);
             }
         } else {
-            // OUTSIDE claims - use world flag
-            if (!plugin.getFlagManager().getWorldFlag("plant-growth")) {
+            // OUTSIDE claims
+            if (!plugin.getFlagManager().getWorldFlag("block-spread")) {
                 event.setCancelled(true);
             }
         }
     }
 
     @EventHandler
-    public void onBlockSpread(org.bukkit.event.block.BlockSpreadEvent event) {
-        // Vines spreading, mushrooms, etc.
-        if (!isInConfiguredWorld(event.getBlock().getLocation())) return;
+    public void onBlockGrow(BlockGrowEvent event) {
+        String worldName = plugin.getConfig().getString("world-name");
+        if (!event.getBlock().getWorld().getName().equals(worldName)) return;
 
         Region region = plugin.getRegionManager().getRegionAt(event.getBlock().getLocation());
 
         if (region != null) {
-            // IN CLAIM - claim flag has priority
-            if (!plugin.getFlagManager().getClaimFlag(region, "plant-growth")) {
+            if (!plugin.getFlagManager().getClaimFlag(region, "crop-growth")) {
                 event.setCancelled(true);
             }
         } else {
-            // OUTSIDE claims - use world flag
-            if (!plugin.getFlagManager().getWorldFlag("plant-growth")) {
+            if (!plugin.getFlagManager().getWorldFlag("crop-growth")) {
                 event.setCancelled(true);
             }
         }
     }
 
     @EventHandler
-    public void onStructureGrow(org.bukkit.event.world.StructureGrowEvent event) {
-        // Trees from saplings, huge mushrooms
-        if (!isInConfiguredWorld(event.getLocation())) return;
+    public void onStructureGrow(StructureGrowEvent event) {
+        String worldName = plugin.getConfig().getString("world-name");
+        if (!event.getLocation().getWorld().getName().equals(worldName)) return;
 
         Region region = plugin.getRegionManager().getRegionAt(event.getLocation());
 
         if (region != null) {
-            // IN CLAIM - claim flag has priority
-            if (!plugin.getFlagManager().getClaimFlag(region, "plant-growth")) {
+            if (!plugin.getFlagManager().getClaimFlag(region, "crop-growth")) {
                 event.setCancelled(true);
             }
         } else {
-            // OUTSIDE claims - use world flag
-            if (!plugin.getFlagManager().getWorldFlag("plant-growth")) {
+            if (!plugin.getFlagManager().getWorldFlag("crop-growth")) {
                 event.setCancelled(true);
             }
         }
     }
-
-    private String getInteractionType(Material material) {
-        String name = material.name();
-        if (name.contains("DOOR")) return "use-doors";
-        if (name.contains("BUTTON")) return "use-buttons";
-        if (name.contains("LEVER")) return "use-levers";
-        if (name.contains("CHEST") || name.contains("BARREL") || name.contains("SHULKER_BOX")) return "chest-access";
-        if (name.contains("FURNACE") || name.contains("BLAST_FURNACE") || name.contains("SMOKER")) return "chest-access";
-        if (name.contains("HOPPER") || name.contains("DROPPER") || name.contains("DISPENSER")) return "chest-access";
-        return null;
-    }
-
-    private boolean isClaimSign(org.bukkit.block.Block block) {
-        if (!(block.getState() instanceof org.bukkit.block.Sign)) return false;
-        
-        // Check if this sign is a claim sign
-        for (Region r : plugin.getRegionManager().getAllRegions()) {
-            if (r.getSignLocation() != null && 
-                r.getSignLocation().getBlockX() == block.getX() &&
-                r.getSignLocation().getBlockY() == block.getY() &&
-                r.getSignLocation().getBlockZ() == block.getZ()) {
-                return true;
-            }
+    
+    /**
+     * Get effective owner - for subclaims, returns parent owner
+     */
+    private UUID getEffectiveOwner(Region region) {
+        if (region.isSubclaim()) {
+            Region parent = plugin.getRegionManager().getParentClaim(region);
+            return parent != null ? parent.getOwner() : null;
         }
-        return false;
+        return region.getOwner();
+    }
+    
+    /**
+     * Check if player has access to claim (checks parent for subclaims)
+     */
+    private boolean hasAccessToParent(Region region, UUID playerId) {
+        if (region.isSubclaim()) {
+            Region parent = plugin.getRegionManager().getParentClaim(region);
+            if (parent != null) {
+                return plugin.getTrustManager().hasAccess(parent, playerId);
+            }
+            return false;
+        }
+        return plugin.getTrustManager().hasAccess(region, playerId);
     }
 
     private boolean isInConfiguredWorld(Player player) {
-        return player.getWorld().getName().equals(plugin.getConfig().getString("world-name"));
+        String worldName = plugin.getConfig().getString("world-name");
+        return player.getWorld().getName().equals(worldName);
     }
-    
-    private boolean isInConfiguredWorld(org.bukkit.Location location) {
-        return location.getWorld().getName().equals(plugin.getConfig().getString("world-name"));
+
+    private boolean isClaimSign(org.bukkit.block.Block block) {
+        if (!(block.getState() instanceof org.bukkit.block.Sign sign)) return false;
+        
+        String line0 = sign.getLine(0);
+        if (line0 == null) return false;
+        
+        String stripped = org.bukkit.ChatColor.stripColor(line0).toLowerCase();
+        return stripped.contains("for sale") || stripped.contains("for hire");
+    }
+
+    private String getInteractionType(Material material) {
+        return switch (material) {
+            case CHEST, TRAPPED_CHEST, BARREL, SHULKER_BOX, ENDER_CHEST,
+                 BLACK_SHULKER_BOX, BLUE_SHULKER_BOX, BROWN_SHULKER_BOX,
+                 CYAN_SHULKER_BOX, GRAY_SHULKER_BOX, GREEN_SHULKER_BOX,
+                 LIGHT_BLUE_SHULKER_BOX, LIGHT_GRAY_SHULKER_BOX, LIME_SHULKER_BOX,
+                 MAGENTA_SHULKER_BOX, ORANGE_SHULKER_BOX, PINK_SHULKER_BOX,
+                 PURPLE_SHULKER_BOX, RED_SHULKER_BOX, WHITE_SHULKER_BOX,
+                 YELLOW_SHULKER_BOX -> "chest-access";
+            case OAK_DOOR, SPRUCE_DOOR, BIRCH_DOOR, JUNGLE_DOOR, ACACIA_DOOR,
+                 DARK_OAK_DOOR, CRIMSON_DOOR, WARPED_DOOR, IRON_DOOR,
+                 OAK_TRAPDOOR, SPRUCE_TRAPDOOR, BIRCH_TRAPDOOR, JUNGLE_TRAPDOOR,
+                 ACACIA_TRAPDOOR, DARK_OAK_TRAPDOOR, CRIMSON_TRAPDOOR,
+                 WARPED_TRAPDOOR, IRON_TRAPDOOR, OAK_FENCE_GATE, SPRUCE_FENCE_GATE,
+                 BIRCH_FENCE_GATE, JUNGLE_FENCE_GATE, ACACIA_FENCE_GATE,
+                 DARK_OAK_FENCE_GATE, CRIMSON_FENCE_GATE, WARPED_FENCE_GATE -> "door-access";
+            case LEVER, STONE_BUTTON, OAK_BUTTON, SPRUCE_BUTTON, BIRCH_BUTTON,
+                 JUNGLE_BUTTON, ACACIA_BUTTON, DARK_OAK_BUTTON, CRIMSON_BUTTON,
+                 WARPED_BUTTON, POLISHED_BLACKSTONE_BUTTON -> "button-access";
+            default -> null;
+        };
     }
 }
