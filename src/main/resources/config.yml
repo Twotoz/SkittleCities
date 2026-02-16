@@ -14,7 +14,6 @@ city-spawn:
 
 # Leave-city spawn location (set with /setleavespawn)
 # Players using /leavecity will teleport here
-# If not configured, players will go to server spawn
 leave-city-spawn:
   world: spawn
   x: 44
