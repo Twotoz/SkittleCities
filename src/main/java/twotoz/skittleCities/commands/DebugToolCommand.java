@@ -31,6 +31,12 @@ public class DebugToolCommand implements CommandExecutor {
             return true;
         }
 
+        // ADMIN ONLY
+        if (!player.hasPermission("skittlecities.admin")) {
+            MessageUtil.send(player, plugin.getConfig(), "no-permission");
+            return true;
+        }
+
         if (!player.hasPermission("skittlecities.debug")) {
             MessageUtil.send(player, plugin.getConfig(), "no-permission");
             return true;

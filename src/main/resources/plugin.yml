@@ -37,9 +37,9 @@ commands:
     permission: skittlecities.player
     
   cdebugtool:
-    description: Toggle claim visualization
+    description: Toggle claim visualization (admin only)
     usage: /cdebugtool
-    permission: skittlecities.debug
+    permission: skittlecities.admin
     
   cignoreclaims:
     description: Toggle bypassing claim protections
@@ -138,8 +138,8 @@ permissions:
     default: op
     
   skittlecities.debug:
-    description: Allows using debug visualization
-    default: true
+    description: Allows using debug visualization (admin only)
+    default: op
     
   skittlecities.commandbypass:
     description: Allows bypassing city command restrictions

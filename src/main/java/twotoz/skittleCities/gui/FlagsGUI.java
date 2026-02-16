@@ -65,12 +65,22 @@ public class FlagsGUI implements Listener {
             String flagName = entry.getKey();
             boolean flagValue = entry.getValue();
 
-            ItemStack item = new ItemStack(flagValue ? Material.GREEN_WOOL : Material.RED_WOOL);
+            // TRUE = ALLOWED (green), FALSE = BLOCKED (red)
+            ItemStack item = new ItemStack(flagValue ? Material.LIME_WOOL : Material.RED_WOOL);
             ItemMeta meta = item.getItemMeta();
             meta.setDisplayName(MessageUtil.colorize("&6" + formatFlagName(flagName)));
+            
+            // Clear explanation of what TRUE/FALSE means
+            String status = flagValue ? "&a&lALLOWED" : "&c&lBLOCKED";
+            String explanation = flagValue ? 
+                "&7Untrusted players &aCAN &7" + getActionDescription(flagName) :
+                "&7Untrusted players &cCANNOT &7" + getActionDescription(flagName);
+            
             meta.setLore(Arrays.asList(
-                MessageUtil.colorize("&7Status: " + (flagValue ? "&aEnabled" : "&cDisabled")),
-                MessageUtil.colorize("&7Click to toggle")
+                MessageUtil.colorize(status),
+                MessageUtil.colorize(explanation),
+                MessageUtil.colorize("&8(Owner/Trusted always allowed)"),
+                MessageUtil.colorize("&e&lClick to toggle")
             ));
             item.setItemMeta(meta);
 
@@ -84,6 +94,23 @@ public class FlagsGUI implements Listener {
         closeMeta.setDisplayName(MessageUtil.colorize("&c&lClose"));
         close.setItemMeta(closeMeta);
         inventory.setItem(49, close);
+    }
+    
+    private String getActionDescription(String flagName) {
+        return switch (flagName) {
+            case "block-break" -> "break blocks";
+            case "block-place" -> "place blocks";
+            case "pvp" -> "fight other players";
+            case "chest-access" -> "open chests";
+            case "door-access" -> "use doors";
+            case "button-access" -> "use buttons/levers";
+            case "mob-spawning" -> "spawn (mobs)";
+            case "trampling" -> "trample farmland";
+            case "block-spread" -> "spread (blocks)";
+            case "crop-growth" -> "grow (crops)";
+            case "fly" -> "fly";
+            default -> "do this";
+        };
     }
 
     private String formatFlagName(String flag) {
@@ -120,17 +147,34 @@ public class FlagsGUI implements Listener {
         String displayName = meta.getDisplayName();
         String flagName = getFlagNameFromDisplay(displayName);
 
+        boolean oldValue, newValue;
+        
         if (isWorldFlags) {
-            boolean currentValue = plugin.getFlagManager().getWorldFlag(flagName);
-            plugin.getFlagManager().setWorldFlag(flagName, !currentValue);
+            oldValue = plugin.getFlagManager().getWorldFlag(flagName);
+            newValue = !oldValue;
+            plugin.getFlagManager().setWorldFlag(flagName, newValue);
         } else {
-            boolean currentValue = plugin.getFlagManager().getClaimFlag(region, flagName);
-            plugin.getFlagManager().setClaimFlag(region, flagName, !currentValue);
+            oldValue = plugin.getFlagManager().getClaimFlag(region, flagName);
+            newValue = !oldValue;
+            plugin.getFlagManager().setClaimFlag(region, flagName, newValue);
         }
 
-        MessageUtil.send(player, plugin.getConfig(), "flag-updated",
-            new String[]{"%flag%", "%value%"},
-            new String[]{flagName, String.valueOf(!getFlagCurrentValue(flagName))});
+        // Send clear message about new state
+        String status = newValue ? "&a&lALLOWED" : "&c&lBLOCKED";
+        String action = getActionDescription(flagName);
+        
+        player.sendMessage(MessageUtil.colorize(
+            plugin.getConfig().getString("messages.prefix") + 
+            "&6" + formatFlagName(flagName) + " &7→ " + status
+        ));
+        
+        if (newValue) {
+            player.sendMessage(MessageUtil.colorize("&7Untrusted players can now " + action));
+        } else {
+            player.sendMessage(MessageUtil.colorize("&7Untrusted players can no longer " + action));
+        }
+        
+        player.sendMessage(MessageUtil.colorize("&8(Owner/Trusted always allowed)"));
 
         setupInventory();
     }
@@ -138,13 +182,5 @@ public class FlagsGUI implements Listener {
     private String getFlagNameFromDisplay(String display) {
         String cleaned = display.replaceAll("§.", "").toLowerCase();
         return cleaned.replace(" ", "-");
-    }
-
-    private boolean getFlagCurrentValue(String flagName) {
-        if (isWorldFlags) {
-            return plugin.getFlagManager().getWorldFlag(flagName);
-        } else {
-            return plugin.getFlagManager().getClaimFlag(region, flagName);
-        }
     }
 }

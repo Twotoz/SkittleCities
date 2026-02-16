@@ -313,10 +313,20 @@ public class DatabaseManager {
         region.setLeaseExpiry(rs.getLong("lease_expiry"));
         region.setAutoExtend(rs.getBoolean("auto_extend"));
 
-        Double signX = rs.getObject("sign_x", Double.class);
-        if (signX != null) {
-            Location signLoc = new Location(world, signX, rs.getDouble("sign_y"), rs.getDouble("sign_z"));
-            region.setSignLocation(signLoc);
+        // Safe sign location loading - handle NULL values
+        try {
+            Double signX = rs.getObject("sign_x", Double.class);
+            if (signX != null) {
+                Double signY = rs.getObject("sign_y", Double.class);
+                Double signZ = rs.getObject("sign_z", Double.class);
+                if (signY != null && signZ != null) {
+                    Location signLoc = new Location(world, signX, signY, signZ);
+                    region.setSignLocation(signLoc);
+                }
+            }
+        } catch (SQLException e) {
+            // sign_x/y/z is NULL - this is fine for regions without signs
+            region.setSignLocation(null);
         }
         
         // Safe parent_id loading - handle NULL and invalid values
