@@ -34,11 +34,6 @@ A comprehensive claim and city management plugin for Minecraft servers with adva
   - Folia-compatible threading
   - Efficient database operations
 
-- **Minimal Lag**
-  - ~0.12% CPU for status bar task
-  - Regional cache with TTL
-  - Batched database updates
-
 ### 🛡️ Admin Tools
 - **Debug Visualization** - Real-time particle display of all claims
 - **Comprehensive GUI** - Manage all claims with pagination
