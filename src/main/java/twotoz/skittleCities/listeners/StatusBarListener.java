@@ -98,20 +98,35 @@ public class StatusBarListener implements Listener {
         // Claim info
         Region region = plugin.getRegionManager().getRegionAt(player.getLocation());
         if (region != null) {
-            // Show claim name (display name if available)
-            String claimName = region.getDisplayName() != null ? region.getDisplayName() : region.getName();
-            
-            // Check if subclaim
+            // Check if subclaim - use parent owner
+            UUID ownerId = region.getOwner();
             if (region.isSubclaim()) {
                 Region parent = plugin.getRegionManager().getParentClaim(region);
                 String parentName = parent != null && parent.getDisplayName() != null ? 
                     parent.getDisplayName() : (parent != null ? parent.getName() : "Unknown");
                 
-                // Show as "Subclaim (Parent)"
-                status.append(MessageUtil.colorize("&e")).append(claimName);
-                status.append(MessageUtil.colorize(" &8(&7")).append(parentName).append(MessageUtil.colorize("&8)"));
+                // Use parent owner for subclaims
+                if (parent != null && parent.getOwner() != null) {
+                    ownerId = parent.getOwner();
+                }
+                
+                // Show ownership status
+                if (ownerId != null && ownerId.equals(playerId)) {
+                    status.append(MessageUtil.colorize("&aYour claim"));
+                } else if (ownerId != null) {
+                    String ownerName = plugin.getServer().getOfflinePlayer(ownerId).getName();
+                    if (ownerName == null) ownerName = "Unknown";
+                    status.append(MessageUtil.colorize("&e")).append(ownerName).append(MessageUtil.colorize("&7's claim"));
+                } else {
+                    status.append(MessageUtil.colorize("&7Unclaimed"));
+                }
+                
+                // Show parent name in parentheses
+                status.append(MessageUtil.colorize(" &8(&e")).append(parentName).append(MessageUtil.colorize("&8)"));
             } else {
                 // Regular claim
+                String claimName = region.getDisplayName() != null ? region.getDisplayName() : region.getName();
+                
                 String ownerName;
                 if (region.getOwner() != null) {
                     if (region.getOwner().equals(playerId)) {

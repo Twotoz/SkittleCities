@@ -79,13 +79,17 @@ public class ClaimMoveListener implements Listener {
         if (region1 == null || region2 == null) return false;
         
         // Check if region1 is subclaim of region2
-        if (region1.isSubclaim() && region1.getParentId() != null && region1.getParentId() == region2.getId()) {
-            return true;
+        if (region1.isSubclaim() && region1.getParentId() != null) {
+            if (region1.getParentId().equals(region2.getId())) {
+                return true;
+            }
         }
         
         // Check if region2 is subclaim of region1
-        if (region2.isSubclaim() && region2.getParentId() != null && region2.getParentId() == region1.getId()) {
-            return true;
+        if (region2.isSubclaim() && region2.getParentId() != null) {
+            if (region2.getParentId().equals(region1.getId())) {
+                return true;
+            }
         }
         
         return false;
@@ -138,19 +142,18 @@ public class ClaimMoveListener implements Listener {
             return;
         }
 
-        // Get display name (uses parent name for subclaims)
-        String displayName;
+        // Get owner - for subclaims, use parent owner
+        UUID ownerId = region.getOwner();
         if (region.isSubclaim()) {
             Region parent = plugin.getRegionManager().getParentClaim(region);
-            displayName = parent != null && parent.getDisplayName() != null ? 
-                parent.getDisplayName() : (parent != null ? parent.getName() : "claim");
-        } else {
-            displayName = region.getDisplayName() != null ? region.getDisplayName() : region.getName();
+            if (parent != null && parent.getOwner() != null) {
+                ownerId = parent.getOwner();
+            }
         }
         
         String ownerName = "Unknown";
-        if (region.getOwner() != null) {
-            ownerName = plugin.getServer().getOfflinePlayer(region.getOwner()).getName();
+        if (ownerId != null) {
+            ownerName = plugin.getServer().getOfflinePlayer(ownerId).getName();
             if (ownerName == null) ownerName = "Unknown";
         } else {
             ownerName = "Unclaimed";
