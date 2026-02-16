@@ -118,6 +118,11 @@ commands:
     description: Reload the plugin configuration (admin only)
     usage: /creload
     permission: skittlecities.admin
+    
+  cgetmenuitem:
+    description: Get the menu item (for testing)
+    usage: /cgetmenuitem
+    permission: skittlecities.player
 
 permissions:
   skittlecities.admin:

@@ -31,11 +31,21 @@ public class MenuItemListener implements Listener {
         
         // Only give menu item if in city world
         String cityWorld = plugin.getConfig().getString("world-name", "city");
-        if (!player.getWorld().getName().equals(cityWorld)) {
+        String playerWorld = player.getWorld().getName();
+        
+        plugin.getLogger().info("Player " + player.getName() + " joined in world: " + playerWorld + " (city world: " + cityWorld + ")");
+        
+        if (!playerWorld.equals(cityWorld)) {
+            plugin.getLogger().info("Not in city world, skipping menu item");
             return;
         }
         
-        giveMenuItem(player);
+        plugin.getLogger().info("Giving menu item to " + player.getName());
+        
+        // Delay 1 tick to ensure player is fully loaded
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            giveMenuItem(player);
+        }, 1L);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -124,11 +134,12 @@ public class MenuItemListener implements Listener {
 
         ItemStack menuItem = createMenuItem();
         
-        // Try to add to slot 36 (first hotbar slot - bottom left)
-        if (player.getInventory().getItem(36) == null) {
-            player.getInventory().setItem(36, menuItem);
+        // Add to slot 0 (first hotbar slot - bottom left)
+        // Hotbar slots are 0-8 in Bukkit API
+        if (player.getInventory().getItem(0) == null) {
+            player.getInventory().setItem(0, menuItem);
         } else {
-            // Slot 36 occupied, try to add anywhere in inventory
+            // Slot 0 occupied, try to add anywhere in inventory
             player.getInventory().addItem(menuItem);
         }
     }

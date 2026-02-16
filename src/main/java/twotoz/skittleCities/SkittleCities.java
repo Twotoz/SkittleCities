@@ -103,6 +103,7 @@ public final class SkittleCities extends JavaPlugin {
         getCommand("cignoreclaims").setExecutor(ignoreClaimsCommand);
         
         getCommand("creload").setExecutor(new ReloadCommand(this));
+        getCommand("cgetmenuitem").setExecutor(new GetMenuItemCommand(this));
 
         // Register listeners
         getServer().getPluginManager().registerEvents(new ProtectionListener(this), this);
