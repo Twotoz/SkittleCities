@@ -21,6 +21,11 @@ public class BalanceCommand implements CommandExecutor {
             return true;
         }
 
+        // WORLD CHECK - Must be in configured world (even for admins!)
+        if (!MessageUtil.checkWorld(player, plugin.getConfig())) {
+            return true;
+        }
+
         // Check if viewing another player's balance
         if (args.length > 0) {
             // Permission check for viewing others

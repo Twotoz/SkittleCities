@@ -36,4 +36,18 @@ public class MessageUtil {
             player.sendMessage(prefix + colorize("&7Tip: Use &e" + bypassCommand + " &7to bypass protection"));
         }
     }
+    
+    /**
+     * Check if player is in the configured world
+     * ALL COMMANDS must use this - even for admins!
+     * @return true if in correct world, false otherwise (sends error message)
+     */
+    public static boolean checkWorld(org.bukkit.entity.Player player, FileConfiguration config) {
+        String worldName = config.getString("world-name", "world");
+        if (!player.getWorld().getName().equals(worldName)) {
+            send(player, config, "wrong-world");
+            return false;
+        }
+        return true;
+    }
 }

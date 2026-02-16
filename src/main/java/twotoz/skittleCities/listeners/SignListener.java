@@ -27,6 +27,13 @@ public class SignListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onSignChange(SignChangeEvent event) {
         Player player = event.getPlayer();
+        
+        // WORLD CHECK - Only work in city world
+        String cityWorld = plugin.getConfig().getString("world-name", "city");
+        if (!event.getBlock().getWorld().getName().equals(cityWorld)) {
+            return; // Ignore signs in other worlds
+        }
+        
         String line0 = event.getLine(0);
         
         if (line0 == null) return;
@@ -109,6 +116,12 @@ public class SignListener implements Listener {
         Block block = event.getClickedBlock();
         if (block == null) return;
         if (!(block.getState() instanceof Sign)) return;
+
+        // WORLD CHECK - Only work in city world
+        String cityWorld = plugin.getConfig().getString("world-name", "city");
+        if (!block.getWorld().getName().equals(cityWorld)) {
+            return; // Ignore signs in other worlds
+        }
 
         Player player = event.getPlayer();
         Sign sign = (Sign) block.getState();

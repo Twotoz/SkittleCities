@@ -23,6 +23,11 @@ public class CreateSubclaimCommand implements CommandExecutor {
             return true;
         }
 
+        // WORLD CHECK - Must be in configured world (even for admins!)
+        if (!MessageUtil.checkWorld(player, plugin.getConfig())) {
+            return true;
+        }
+
         // ADMIN ONLY - subclaims are admin tools!
         if (!player.hasPermission("skittlecities.admin")) {
             MessageUtil.send(player, plugin.getConfig(), "no-permission");
@@ -100,8 +105,9 @@ public class CreateSubclaimCommand implements CommandExecutor {
             }
         }
 
-        // Copy flags from parent as defaults (can be customized later)
-        subclaim.setFlags(new java.util.HashMap<>(parentRegion.getFlags()));
+        // Apply DEFAULT flags (same as normal claims)
+        // Admin can customize these later with /cflags
+        plugin.getFlagManager().applyDefaultFlags(subclaim);
         
         // Inherit trust from parent
         subclaim.setTrustedPlayers(new java.util.HashSet<>(parentRegion.getTrustedPlayers()));
@@ -119,9 +125,12 @@ public class CreateSubclaimCommand implements CommandExecutor {
             "&aSubclaim created inside &e" + parentName));
         player.sendMessage(MessageUtil.colorize("&7→ Technical name: &f" + technicalName));
         player.sendMessage(MessageUtil.colorize("&7→ Uses parent name when displaying"));
-        player.sendMessage(MessageUtil.colorize("&7→ Flags: &eCopied from parent (customize with /cflags)"));
+        player.sendMessage(MessageUtil.colorize("&7→ Owner: &e" + (parentRegion.getOwner() != null ? 
+            plugin.getServer().getOfflinePlayer(parentRegion.getOwner()).getName() : "None")));
+        player.sendMessage(MessageUtil.colorize("&7→ Flags: &eDefault (building BLOCKED for untrusted)"));
+        player.sendMessage(MessageUtil.colorize("&7→ Trust: &eInherited from parent"));
         player.sendMessage(MessageUtil.colorize("&7"));
-        player.sendMessage(MessageUtil.colorize("&eSubclaim flags OVERRIDE parent flags!"));
+        player.sendMessage(MessageUtil.colorize("&eCustomize with /cflags &7- Subclaim flags OVERRIDE parent!"));
 
         return true;
     }

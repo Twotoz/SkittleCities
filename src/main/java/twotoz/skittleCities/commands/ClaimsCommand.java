@@ -22,6 +22,11 @@ public class ClaimsCommand implements CommandExecutor {
             return true;
         }
 
+        // WORLD CHECK - Must be in configured world (even for admins!)
+        if (!MessageUtil.checkWorld(player, plugin.getConfig())) {
+            return true;
+        }
+
         ClaimsListGUI gui = new ClaimsListGUI(plugin, player);
         gui.open();
 

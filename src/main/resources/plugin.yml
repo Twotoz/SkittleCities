@@ -113,6 +113,11 @@ commands:
     description: List subclaims of a claim (admin only)
     usage: /csubclaims
     permission: skittlecities.admin
+    
+  creload:
+    description: Reload the plugin configuration (admin only)
+    usage: /creload
+    permission: skittlecities.admin
 
 permissions:
   skittlecities.admin:

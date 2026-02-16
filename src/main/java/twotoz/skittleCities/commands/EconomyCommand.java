@@ -28,6 +28,13 @@ public class EconomyCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        // WORLD CHECK - Must be in configured world (even for admins!)
+        if (sender instanceof Player player) {
+            if (!MessageUtil.checkWorld(player, plugin.getConfig())) {
+                return true;
+            }
+        }
+
         if (args.length < 3) {
             sender.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
                 "&cUsage: /ceconomy <give|take|set> <player> <amount>"));

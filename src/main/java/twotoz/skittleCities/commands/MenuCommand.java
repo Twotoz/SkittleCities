@@ -22,6 +22,11 @@ public class MenuCommand implements CommandExecutor {
             return true;
         }
 
+        // WORLD CHECK - Must be in configured world (even for admins!)
+        if (!MessageUtil.checkWorld(player, plugin.getConfig())) {
+            return true;
+        }
+
         new MainMenuGUI(plugin).open(player);
         return true;
     }

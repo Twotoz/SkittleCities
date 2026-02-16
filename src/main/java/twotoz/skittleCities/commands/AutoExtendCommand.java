@@ -22,6 +22,11 @@ public class AutoExtendCommand implements CommandExecutor {
             return true;
         }
 
+        // WORLD CHECK - Must be in configured world (even for admins!)
+        if (!MessageUtil.checkWorld(player, plugin.getConfig())) {
+            return true;
+        }
+
         Region region = plugin.getRegionManager().getRegionAt(player.getLocation());
         
         if (region == null) {

@@ -23,6 +23,8 @@ public class CityCommand implements CommandExecutor {
             return true;
         }
 
+        // NO WORLD CHECK - /city must work from ANY world to teleport TO city!
+
         String worldName = plugin.getConfig().getString("world-name");
         
         // Check if already in city

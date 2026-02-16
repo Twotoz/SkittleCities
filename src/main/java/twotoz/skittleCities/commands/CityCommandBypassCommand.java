@@ -21,6 +21,11 @@ public class CityCommandBypassCommand implements CommandExecutor {
             return true;
         }
 
+        // WORLD CHECK - Must be in configured world (even for admins!)
+        if (!MessageUtil.checkWorld(player, plugin.getConfig())) {
+            return true;
+        }
+
         if (!player.hasPermission("skittlecities.commandbypass")) {
             MessageUtil.send(player, plugin.getConfig(), "no-permission");
             return true;

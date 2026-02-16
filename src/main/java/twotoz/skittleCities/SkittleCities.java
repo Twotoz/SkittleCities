@@ -8,6 +8,7 @@ import twotoz.skittleCities.gui.MainMenuGUI;
 import twotoz.skittleCities.listeners.ClaimMoveListener;
 import twotoz.skittleCities.listeners.CombatListener;
 import twotoz.skittleCities.listeners.CommandBlockListener;
+import twotoz.skittleCities.listeners.MenuItemListener;
 import twotoz.skittleCities.listeners.PlayerJoinListener;
 import twotoz.skittleCities.listeners.ProtectionListener;
 import twotoz.skittleCities.listeners.SelectionListener;
@@ -100,6 +101,8 @@ public final class SkittleCities extends JavaPlugin {
         
         ignoreClaimsCommand = new IgnoreClaimsCommand(this);
         getCommand("cignoreclaims").setExecutor(ignoreClaimsCommand);
+        
+        getCommand("creload").setExecutor(new ReloadCommand(this));
 
         // Register listeners
         getServer().getPluginManager().registerEvents(new ProtectionListener(this), this);
@@ -110,6 +113,7 @@ public final class SkittleCities extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CombatListener(this), this);
         getServer().getPluginManager().registerEvents(new MainMenuGUI(this), this);
         getServer().getPluginManager().registerEvents(new HelpGUI(this), this);
+        getServer().getPluginManager().registerEvents(new MenuItemListener(this), this);
         
         commandBlockListener = new CommandBlockListener(this);
         getServer().getPluginManager().registerEvents(commandBlockListener, this);

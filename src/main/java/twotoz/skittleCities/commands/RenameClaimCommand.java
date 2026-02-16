@@ -22,6 +22,11 @@ public class RenameClaimCommand implements CommandExecutor {
             return true;
         }
 
+        // WORLD CHECK - Must be in configured world (even for admins!)
+        if (!MessageUtil.checkWorld(player, plugin.getConfig())) {
+            return true;
+        }
+
         // ADMIN ONLY
         if (!player.hasPermission("skittlecities.admin")) {
             MessageUtil.send(player, plugin.getConfig(), "no-permission");

@@ -22,6 +22,8 @@ public class LeaveCityCommand implements CommandExecutor {
             return true;
         }
 
+        // NO WORLD CHECK - command itself checks if in city world below
+
         String cityWorldName = plugin.getConfig().getString("world-name");
         
         // Check if in city world

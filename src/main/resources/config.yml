@@ -1,11 +1,11 @@
 # SkittleCities Configuration
 
 # World where the plugin is active
-world-name: world
+world-name: city
 
 # City spawn location (set with /setcityspawn)
 city-spawn:
-  world: world
+  world: city
   x: 0
   y: 64
   z: 0
@@ -105,10 +105,12 @@ default-world-flags:
 
 # Default claim flags (applied to new claims)
 # CLAIM FLAGS ALWAYS OVERRIDE WORLD FLAGS
+# NOTE: Owner and Trusted players can ALWAYS build regardless of these flags!
+# These flags only control UNTRUSTED (public) players
 default-claim-flags:
-  pvp: false
-  block-break: true  # Owner and trusted can break
-  block-place: true  # Owner and trusted can place
+  pvp: false              # Default: No PVP in claims
+  block-break: false      # Default: Untrusted CANNOT break blocks (Owner/Trusted always can!)
+  block-place: false      # Default: Untrusted CANNOT place blocks (Owner/Trusted always can!)
   mob-spawning: false
   plant-growth: true      # Crops, saplings, vines growing
   trampling: false        # Prevent farmland trampling
