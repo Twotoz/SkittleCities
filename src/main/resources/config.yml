@@ -98,6 +98,8 @@ sell-prices-examples:
   EMERALD: 25.00
 
 # Default world flags (applied to the entire world outside claims)
+# NOTE: Doors are ALWAYS allowed outside claims (no flag)
+# NOTE: Trapdoors are ALWAYS blocked outside claims (no flag)
 default-world-flags:
   pvp: true
   block-break: false
@@ -106,7 +108,6 @@ default-world-flags:
   plant-growth: true      # Crops, saplings, vines growing
   trampling: true         # Farmland trampling
   entity-damage: true
-  use-doors: true
   use-buttons: true
   use-levers: true
   chest-access: false
@@ -117,6 +118,8 @@ default-world-flags:
 # CLAIM FLAGS ALWAYS OVERRIDE WORLD FLAGS
 # NOTE: Owner and Trusted players can ALWAYS build regardless of these flags!
 # These flags only control UNTRUSTED (public) players
+# NOTE: Doors are default ALLOWED everywhere (set use-doors: false to block)
+# NOTE: Trapdoors are default BLOCKED outside claims (set use-trapdoors: true to allow in claim)
 default-claim-flags:
   pvp: false              # Default: No PVP in claims
   block-break: false      # Default: Untrusted CANNOT break blocks (Owner/Trusted always can!)
@@ -125,7 +128,8 @@ default-claim-flags:
   plant-growth: true      # Crops, saplings, vines growing
   trampling: false        # Prevent farmland trampling
   entity-damage: true
-  use-doors: true
+  use-doors: true         # Default: Untrusted CAN open doors (set to false to block)
+  use-trapdoors: false    # Default: Untrusted CANNOT open trapdoors (set to true to allow)
   use-buttons: true
   use-levers: true
   chest-access: true

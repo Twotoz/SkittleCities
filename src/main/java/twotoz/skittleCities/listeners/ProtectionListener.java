@@ -191,10 +191,24 @@ public class ProtectionListener implements Listener {
             }
         }
 
-        // REGULAR INTERACTIONS (chests, doors, etc.)
+        // CHECK FOR SPECIAL INTERACTIONS
         if (plugin.getIgnoreClaimsCommand().isBypassing(player.getUniqueId())) return;
 
         Material material = event.getClickedBlock().getType();
+        
+        // DOORS - Special handling (DEFAULT ALLOWED everywhere)
+        if (isDoor(material)) {
+            handleDoorInteraction(event, player);
+            return;
+        }
+        
+        // TRAPDOORS - Special handling (DEFAULT BLOCKED outside claims)
+        if (isTrapdoor(material)) {
+            handleTrapdoorInteraction(event, player);
+            return;
+        }
+        
+        // OTHER INTERACTIONS (chests, buttons, levers)
         String interactionType = getInteractionType(material);
         if (interactionType == null) return;
 
@@ -230,6 +244,84 @@ public class ProtectionListener implements Listener {
                 MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
             }
         }
+    }
+    
+    /**
+     * Handle door interactions - DEFAULT ALLOWED (only block if flag explicitly disables)
+     */
+    private void handleDoorInteraction(PlayerInteractEvent event, Player player) {
+        Region region = plugin.getRegionManager().getRegionAt(event.getClickedBlock().getLocation());
+        
+        if (region != null) {
+            // IN A CLAIM
+            UUID effectiveOwner = getEffectiveOwner(region);
+            
+            // Owner/Trusted always allowed
+            if (effectiveOwner != null && hasAccessToParent(region, player.getUniqueId())) {
+                return; // ALLOW
+            }
+            
+            // Check use-doors flag - if FALSE, block
+            if (!plugin.getFlagManager().getClaimFlag(region, "use-doors")) {
+                event.setCancelled(true);
+                MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
+            }
+            // If flag is TRUE or not set → ALLOW (default behavior)
+        }
+        // OUTSIDE claims → ALWAYS ALLOW (no world flag check for doors)
+    }
+    
+    /**
+     * Handle trapdoor interactions - DEFAULT BLOCKED outside claims
+     */
+    private void handleTrapdoorInteraction(PlayerInteractEvent event, Player player) {
+        Region region = plugin.getRegionManager().getRegionAt(event.getClickedBlock().getLocation());
+        
+        if (region != null) {
+            // IN A CLAIM
+            UUID effectiveOwner = getEffectiveOwner(region);
+            
+            // Owner/Trusted always allowed
+            if (effectiveOwner != null && hasAccessToParent(region, player.getUniqueId())) {
+                return; // ALLOW
+            }
+            
+            // Check use-trapdoors flag
+            if (!plugin.getFlagManager().getClaimFlag(region, "use-trapdoors")) {
+                event.setCancelled(true);
+                MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
+            }
+        } else {
+            // OUTSIDE claims → DEFAULT BLOCKED
+            event.setCancelled(true);
+            MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
+        }
+    }
+    
+    /**
+     * Check if material is a door
+     */
+    private boolean isDoor(Material material) {
+        return switch (material) {
+            case OAK_DOOR, SPRUCE_DOOR, BIRCH_DOOR, JUNGLE_DOOR, ACACIA_DOOR,
+                 DARK_OAK_DOOR, CRIMSON_DOOR, WARPED_DOOR, IRON_DOOR,
+                 OAK_FENCE_GATE, SPRUCE_FENCE_GATE, BIRCH_FENCE_GATE,
+                 JUNGLE_FENCE_GATE, ACACIA_FENCE_GATE, DARK_OAK_FENCE_GATE,
+                 CRIMSON_FENCE_GATE, WARPED_FENCE_GATE -> true;
+            default -> false;
+        };
+    }
+    
+    /**
+     * Check if material is a trapdoor
+     */
+    private boolean isTrapdoor(Material material) {
+        return switch (material) {
+            case OAK_TRAPDOOR, SPRUCE_TRAPDOOR, BIRCH_TRAPDOOR, JUNGLE_TRAPDOOR,
+                 ACACIA_TRAPDOOR, DARK_OAK_TRAPDOOR, CRIMSON_TRAPDOOR,
+                 WARPED_TRAPDOOR, IRON_TRAPDOOR -> true;
+            default -> false;
+        };
     }
 
     @EventHandler
@@ -383,13 +475,6 @@ public class ProtectionListener implements Listener {
                  MAGENTA_SHULKER_BOX, ORANGE_SHULKER_BOX, PINK_SHULKER_BOX,
                  PURPLE_SHULKER_BOX, RED_SHULKER_BOX, WHITE_SHULKER_BOX,
                  YELLOW_SHULKER_BOX -> "chest-access";
-            case OAK_DOOR, SPRUCE_DOOR, BIRCH_DOOR, JUNGLE_DOOR, ACACIA_DOOR,
-                 DARK_OAK_DOOR, CRIMSON_DOOR, WARPED_DOOR, IRON_DOOR,
-                 OAK_TRAPDOOR, SPRUCE_TRAPDOOR, BIRCH_TRAPDOOR, JUNGLE_TRAPDOOR,
-                 ACACIA_TRAPDOOR, DARK_OAK_TRAPDOOR, CRIMSON_TRAPDOOR,
-                 WARPED_TRAPDOOR, IRON_TRAPDOOR, OAK_FENCE_GATE, SPRUCE_FENCE_GATE,
-                 BIRCH_FENCE_GATE, JUNGLE_FENCE_GATE, ACACIA_FENCE_GATE,
-                 DARK_OAK_FENCE_GATE, CRIMSON_FENCE_GATE, WARPED_FENCE_GATE -> "door-access";
             case LEVER, STONE_BUTTON, OAK_BUTTON, SPRUCE_BUTTON, BIRCH_BUTTON,
                  JUNGLE_BUTTON, ACACIA_BUTTON, DARK_OAK_BUTTON, CRIMSON_BUTTON,
                  WARPED_BUTTON, POLISHED_BLACKSTONE_BUTTON -> "button-access";
