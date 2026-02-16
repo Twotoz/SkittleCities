@@ -24,7 +24,8 @@ public class CreateSubclaimCommand implements CommandExecutor {
             return true;
         }
 
-        if (!player.hasPermission("skittlecities.subclaim")) {
+        // ADMIN ONLY - subclaims are admin tools!
+        if (!player.hasPermission("skittlecities.admin")) {
             MessageUtil.send(player, plugin.getConfig(), "no-permission");
             return true;
         }
@@ -32,12 +33,13 @@ public class CreateSubclaimCommand implements CommandExecutor {
         if (args.length < 1) {
             player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
                 "&cUsage: /csubclaim <name>"));
-            player.sendMessage(MessageUtil.colorize("&7Create a subclaim within your claim!"));
+            player.sendMessage(MessageUtil.colorize("&7Create a subclaim within a claim (admin only)"));
             player.sendMessage(MessageUtil.colorize("&71. Use &e/ctool &7to select area"));
             player.sendMessage(MessageUtil.colorize("&72. Stand in parent claim"));
             player.sendMessage(MessageUtil.colorize("&73. Run &e/csubclaim <name>"));
             player.sendMessage(MessageUtil.colorize("&7"));
             player.sendMessage(MessageUtil.colorize("&eSubclaims override parent flags!"));
+            player.sendMessage(MessageUtil.colorize("&7Example: Parent has block-break:false, subclaim can have block-break:true"));
             return true;
         }
 
@@ -57,13 +59,15 @@ public class CreateSubclaimCommand implements CommandExecutor {
         if (parentRegion == null) {
             player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
                 "&cYou must stand inside the parent claim!"));
+            player.sendMessage(MessageUtil.colorize("&7Subclaims must be created inside an existing claim."));
             return true;
         }
 
-        // Check ownership of parent
-        if (parentRegion.getOwner() == null || !parentRegion.getOwner().equals(player.getUniqueId())) {
+        // Don't allow subclaims of subclaims
+        if (parentRegion.isSubclaim()) {
             player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                "&cYou don't own this claim!"));
+                "&cYou cannot create a subclaim inside another subclaim!"));
+            player.sendMessage(MessageUtil.colorize("&7Only create subclaims in main claims."));
             return true;
         }
 
@@ -75,8 +79,19 @@ public class CreateSubclaimCommand implements CommandExecutor {
 
         // Verify subclaim is completely inside parent
         if (!isCompletelyInside(subclaim, parentRegion)) {
+            String parentName = parentRegion.getDisplayName() != null ? 
+                parentRegion.getDisplayName() : parentRegion.getName();
+            
             player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
                 "&cSubclaim must be completely inside the parent claim!"));
+            player.sendMessage(MessageUtil.colorize("&7"));
+            player.sendMessage(MessageUtil.colorize("&eYour selection extends outside of: &a" + parentName));
+            player.sendMessage(MessageUtil.colorize("&7Make sure your selection is fully within the claim boundaries."));
+            player.sendMessage(MessageUtil.colorize("&7"));
+            player.sendMessage(MessageUtil.colorize("&7Parent claim boundaries:"));
+            player.sendMessage(MessageUtil.colorize("  &7X: &f" + parentRegion.getMinX() + " &7to &f" + parentRegion.getMaxX()));
+            player.sendMessage(MessageUtil.colorize("  &7Y: &f" + parentRegion.getMinY() + " &7to &f" + parentRegion.getMaxY()));
+            player.sendMessage(MessageUtil.colorize("  &7Z: &f" + parentRegion.getMinZ() + " &7to &f" + parentRegion.getMaxZ()));
             return true;
         }
 

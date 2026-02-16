@@ -175,6 +175,68 @@ public class RegionManager {
         }
         return null;
     }
+    
+    /**
+     * Check if selection overlaps with existing claims
+     * Returns: null if OK to create claim
+     *          Region if fully inside (offer subclaim)
+     *          throws exception if partial overlap
+     */
+    public SelectionStatus checkSelection(org.bukkit.Location pos1, org.bukkit.Location pos2) {
+        int minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
+        int maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
+        int minY = Math.min(pos1.getBlockY(), pos2.getBlockY());
+        int maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
+        int minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
+        int maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
+        
+        for (Region existing : regions) {
+            // Check if selection is completely inside this region
+            boolean completelyInside = 
+                minX >= existing.getMinX() && maxX <= existing.getMaxX() &&
+                minY >= existing.getMinY() && maxY <= existing.getMaxY() &&
+                minZ >= existing.getMinZ() && maxZ <= existing.getMaxZ();
+            
+            if (completelyInside) {
+                return new SelectionStatus(SelectionStatus.Type.INSIDE_CLAIM, existing);
+            }
+            
+            // Check if there's ANY overlap (partial or complete)
+            boolean hasOverlap = 
+                maxX >= existing.getMinX() && minX <= existing.getMaxX() &&
+                maxY >= existing.getMinY() && minY <= existing.getMaxY() &&
+                maxZ >= existing.getMinZ() && minZ <= existing.getMaxZ();
+            
+            if (hasOverlap) {
+                // Partial overlap
+                return new SelectionStatus(SelectionStatus.Type.PARTIAL_OVERLAP, existing);
+            }
+        }
+        
+        return new SelectionStatus(SelectionStatus.Type.CLEAR, null);
+    }
+    
+    /**
+     * Selection status result
+     */
+    public static class SelectionStatus {
+        public enum Type {
+            CLEAR,           // No overlap, can create claim
+            INSIDE_CLAIM,    // Fully inside claim, offer subclaim
+            PARTIAL_OVERLAP  // Partial overlap, cannot create
+        }
+        
+        private final Type type;
+        private final Region region;
+        
+        public SelectionStatus(Type type, Region region) {
+            this.type = type;
+            this.region = region;
+        }
+        
+        public Type getType() { return type; }
+        public Region getRegion() { return region; }
+    }
 
     private void createRegionSign(Region region) {
         Location signLoc = region.getSignLocation();

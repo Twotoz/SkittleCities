@@ -22,28 +22,33 @@ public class ParticleUtil {
         double maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ()) + 1;
 
         double step = 0.5;
+        
+        // Choose particle color based on whether it's a subclaim
+        // SUBCLAIMS = BLUE (soul fire flame)
+        // NORMAL CLAIMS = RED/ORANGE (flame)
+        Particle particle = region.isSubclaim() ? Particle.SOUL_FIRE_FLAME : Particle.FLAME;
 
         // Bottom edges
-        drawLine(player, world, minX, minY, minZ, maxX, minY, minZ, step);
-        drawLine(player, world, minX, minY, maxZ, maxX, minY, maxZ, step);
-        drawLine(player, world, minX, minY, minZ, minX, minY, maxZ, step);
-        drawLine(player, world, maxX, minY, minZ, maxX, minY, maxZ, step);
+        drawLine(player, world, minX, minY, minZ, maxX, minY, minZ, step, particle);
+        drawLine(player, world, minX, minY, maxZ, maxX, minY, maxZ, step, particle);
+        drawLine(player, world, minX, minY, minZ, minX, minY, maxZ, step, particle);
+        drawLine(player, world, maxX, minY, minZ, maxX, minY, maxZ, step, particle);
 
         // Top edges
-        drawLine(player, world, minX, maxY, minZ, maxX, maxY, minZ, step);
-        drawLine(player, world, minX, maxY, maxZ, maxX, maxY, maxZ, step);
-        drawLine(player, world, minX, maxY, minZ, minX, maxY, maxZ, step);
-        drawLine(player, world, maxX, maxY, minZ, maxX, maxY, maxZ, step);
+        drawLine(player, world, minX, maxY, minZ, maxX, maxY, minZ, step, particle);
+        drawLine(player, world, minX, maxY, maxZ, maxX, maxY, maxZ, step, particle);
+        drawLine(player, world, minX, maxY, minZ, minX, maxY, maxZ, step, particle);
+        drawLine(player, world, maxX, maxY, minZ, maxX, maxY, maxZ, step, particle);
 
         // Vertical edges
-        drawLine(player, world, minX, minY, minZ, minX, maxY, minZ, step);
-        drawLine(player, world, maxX, minY, minZ, maxX, maxY, minZ, step);
-        drawLine(player, world, minX, minY, maxZ, minX, maxY, maxZ, step);
-        drawLine(player, world, maxX, minY, maxZ, maxX, maxY, maxZ, step);
+        drawLine(player, world, minX, minY, minZ, minX, maxY, minZ, step, particle);
+        drawLine(player, world, maxX, minY, minZ, maxX, maxY, minZ, step, particle);
+        drawLine(player, world, minX, minY, maxZ, minX, maxY, maxZ, step, particle);
+        drawLine(player, world, maxX, minY, maxZ, maxX, maxY, maxZ, step, particle);
     }
 
     private static void drawLine(Player player, World world, double x1, double y1, double z1, 
-                                 double x2, double y2, double z2, double step) {
+                                 double x2, double y2, double z2, double step, Particle particle) {
         double distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2) + Math.pow(z2 - z1, 2));
         int points = (int) (distance / step);
 
@@ -54,7 +59,7 @@ public class ParticleUtil {
             double z = z1 + (z2 - z1) * ratio;
 
             Location loc = new Location(world, x, y, z);
-            player.spawnParticle(Particle.FLAME, loc, 1, 0, 0, 0, 0);
+            player.spawnParticle(particle, loc, 1, 0, 0, 0, 0);
         }
     }
 }

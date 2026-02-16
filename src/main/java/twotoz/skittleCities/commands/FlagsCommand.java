@@ -23,6 +23,12 @@ public class FlagsCommand implements CommandExecutor {
             return true;
         }
 
+        // ADMIN ONLY - only admins can modify flags
+        if (!player.hasPermission("skittlecities.admin")) {
+            MessageUtil.send(player, plugin.getConfig(), "no-permission");
+            return true;
+        }
+
         String worldName = plugin.getConfig().getString("world-name");
         if (!player.getWorld().getName().equals(worldName)) {
             MessageUtil.send(player, plugin.getConfig(), "wrong-world");
@@ -30,16 +36,6 @@ public class FlagsCommand implements CommandExecutor {
         }
 
         Region region = plugin.getRegionManager().getRegionAt(player.getLocation());
-        
-        // Check permissions
-        boolean isAdmin = player.hasPermission("skittlecities.admin");
-        boolean isOwner = region != null && region.getOwner() != null && 
-                         region.getOwner().equals(player.getUniqueId());
-
-        if (!isAdmin && !isOwner) {
-            MessageUtil.send(player, plugin.getConfig(), "no-permission");
-            return true;
-        }
 
         FlagsGUI gui = new FlagsGUI(plugin, player, region);
         gui.open();

@@ -100,19 +100,19 @@ commands:
     permission: skittlecities.admin
     
   crename:
-    description: Rename your claim
+    description: Rename a claim (admin only)
     usage: /crename <name>
-    permission: skittlecities.rename
+    permission: skittlecities.admin
     
   csubclaim:
+    description: Create a subclaim within a claim (admin only)
+    usage: /csubclaim <name>
+    permission: skittlecities.admin
     
   csubclaims:
-    description: List subclaims of your claim
+    description: List subclaims of a claim (admin only)
     usage: /csubclaims
-    permission: skittlecities.subclaim
-    description: Create a subclaim within your claim
-    usage: /csubclaim <name>
-    permission: skittlecities.subclaim
+    permission: skittlecities.admin
 
 permissions:
   skittlecities.admin:
@@ -124,8 +124,6 @@ permissions:
       skittlecities.debug: true
       skittlecities.commandbypass: true
       skittlecities.balance.others: true
-      skittlecities.rename: true
-      skittlecities.subclaim: true
       
   skittlecities.player:
     description: Basic player permissions
@@ -133,14 +131,6 @@ permissions:
     
   skittlecities.trust:
     description: Allows trusting/untrusting players
-    default: true
-    
-  skittlecities.rename:
-    description: Allows renaming owned claims
-    default: true
-    
-  skittlecities.subclaim:
-    description: Allows creating subclaims within owned claims
     default: true
     
   skittlecities.balance.others:

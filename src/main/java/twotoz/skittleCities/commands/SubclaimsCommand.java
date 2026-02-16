@@ -24,7 +24,8 @@ public class SubclaimsCommand implements CommandExecutor {
             return true;
         }
 
-        if (!player.hasPermission("skittlecities.subclaim")) {
+        // ADMIN ONLY
+        if (!player.hasPermission("skittlecities.admin")) {
             MessageUtil.send(player, plugin.getConfig(), "no-permission");
             return true;
         }
@@ -47,13 +48,7 @@ public class SubclaimsCommand implements CommandExecutor {
             }
         }
 
-        // Check ownership
-        if (region.getOwner() == null || !region.getOwner().equals(player.getUniqueId())) {
-            MessageUtil.send(player, plugin.getConfig(), "not-claim-owner");
-            return true;
-        }
-
-        // Get subclaims
+        // Get subclaims (admin can view any claim's subclaims)
         List<Region> subclaims = plugin.getRegionManager().getSubclaims(region.getId());
 
         String claimName = region.getDisplayName() != null ? region.getDisplayName() : region.getName();

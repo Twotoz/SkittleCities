@@ -22,16 +22,17 @@ public class RenameClaimCommand implements CommandExecutor {
             return true;
         }
 
-        if (!player.hasPermission("skittlecities.rename")) {
+        // ADMIN ONLY
+        if (!player.hasPermission("skittlecities.admin")) {
             MessageUtil.send(player, plugin.getConfig(), "no-permission");
             return true;
         }
 
         if (args.length == 0) {
             player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                "&cUsage: /crename <name>"));
-            player.sendMessage(MessageUtil.colorize("&7Stand in your claim and give it a custom name!"));
-            player.sendMessage(MessageUtil.colorize("&7Example: &e/crename My Epic Base"));
+                "&cUsage: /crename <n>"));
+            player.sendMessage(MessageUtil.colorize("&7Stand in a claim and rename it (admin only)"));
+            player.sendMessage(MessageUtil.colorize("&7Example: &e/crename Leon's Butchery"));
             return true;
         }
 
@@ -40,12 +41,6 @@ public class RenameClaimCommand implements CommandExecutor {
         
         if (region == null) {
             MessageUtil.send(player, plugin.getConfig(), "not-in-claim");
-            return true;
-        }
-
-        // Check ownership
-        if (region.getOwner() == null || !region.getOwner().equals(player.getUniqueId())) {
-            MessageUtil.send(player, plugin.getConfig(), "not-claim-owner");
             return true;
         }
 

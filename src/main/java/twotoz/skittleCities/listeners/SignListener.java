@@ -22,7 +22,7 @@ public class SignListener implements Listener {
     }
 
     /**
-     * Handle player-created sell/buy signs
+     * Block player-created sell/buy signs (admin only via /csellsign)
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onSignChange(SignChangeEvent event) {
@@ -31,10 +31,20 @@ public class SignListener implements Listener {
         
         if (line0 == null) return;
         
-        // Check if player is creating a [SELL] or [BUY] sign
+        // Check if player is trying to create a [SELL] or [BUY] sign
         String stripped = org.bukkit.ChatColor.stripColor(line0).toLowerCase().trim();
         
         if (stripped.equals("sell") || stripped.equals("buy")) {
+            // ADMIN ONLY - players cannot create sell/buy signs
+            if (!player.hasPermission("skittlecities.admin")) {
+                event.setCancelled(true);
+                player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
+                    "&cOnly admins can create [SELL]/[BUY] signs!"));
+                player.sendMessage(MessageUtil.colorize("&7Admins use: &e/csellsign <material> <price>"));
+                return;
+            }
+            
+            // Admin can create - validate and format
             // Validate material on line 1
             String line1 = event.getLine(1);
             if (line1 == null || line1.trim().isEmpty()) {
@@ -80,7 +90,7 @@ public class SignListener implements Listener {
                 return;
             }
             
-            // Format the sign nicely
+            // Format the sign nicely (admin only gets here)
             event.setLine(0, MessageUtil.colorize("&9&l[" + stripped.toUpperCase() + "]"));
             event.setLine(1, MessageUtil.colorize("&e" + material.name()));
             event.setLine(2, MessageUtil.colorize("&6$" + String.format("%.2f", price) + " &7each"));
