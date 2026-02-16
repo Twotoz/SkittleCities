@@ -46,16 +46,14 @@ public class ProtectionListener implements Listener {
         Region region = plugin.getRegionManager().getRegionAt(event.getBlock().getLocation());
 
         if (region != null) {
-            // IN A CLAIM (claimed or unclaimed)
-            // Rule: MUST have access (owner/trusted) to build
-            if (!plugin.getTrustManager().hasAccess(region, player.getUniqueId())) {
-                // No access = always blocked
-                event.setCancelled(true);
-                MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
+            // IN A CLAIM
+            // Check if player has access (owner or trusted)
+            if (plugin.getTrustManager().hasAccess(region, player.getUniqueId())) {
+                // OWNER/TRUSTED = ALWAYS ALLOWED (ignore flags!)
                 return;
             }
             
-            // Has access - check flag
+            // NOT owner/trusted - check flag
             if (!plugin.getFlagManager().getClaimFlag(region, "block-break")) {
                 event.setCancelled(true);
                 MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
@@ -79,15 +77,14 @@ public class ProtectionListener implements Listener {
         Region region = plugin.getRegionManager().getRegionAt(event.getBlock().getLocation());
 
         if (region != null) {
-            // IN A CLAIM - must have access
-            if (!plugin.getTrustManager().hasAccess(region, player.getUniqueId())) {
-                // No access = always blocked
-                event.setCancelled(true);
-                MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
+            // IN A CLAIM
+            // Check if player has access (owner or trusted)
+            if (plugin.getTrustManager().hasAccess(region, player.getUniqueId())) {
+                // OWNER/TRUSTED = ALWAYS ALLOWED (ignore flags!)
                 return;
             }
             
-            // Has access - check flag
+            // NOT owner/trusted - check flag
             if (!plugin.getFlagManager().getClaimFlag(region, "block-place")) {
                 event.setCancelled(true);
                 MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
@@ -111,11 +108,16 @@ public class ProtectionListener implements Listener {
         Region region = plugin.getRegionManager().getRegionAt(event.getBlock().getLocation());
 
         if (region != null) {
-            // IN A CLAIM - must have access to edit signs
-            if (!plugin.getTrustManager().hasAccess(region, player.getUniqueId())) {
-                event.setCancelled(true);
-                MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
+            // IN A CLAIM
+            // Check if player has access (owner or trusted)
+            if (plugin.getTrustManager().hasAccess(region, player.getUniqueId())) {
+                // OWNER/TRUSTED = ALWAYS ALLOWED
+                return;
             }
+            
+            // NOT owner/trusted - block sign editing
+            event.setCancelled(true);
+            MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
         } else {
             // OUTSIDE claims - check world flag
             if (!plugin.getFlagManager().getWorldFlag("block-place")) {
@@ -141,7 +143,14 @@ public class ProtectionListener implements Listener {
             Region region = plugin.getRegionManager().getRegionAt(event.getClickedBlock().getLocation());
 
             if (region != null) {
-                // IN CLAIM - claim flag has priority
+                // IN CLAIM
+                // Check if player has access (owner or trusted)
+                if (plugin.getTrustManager().hasAccess(region, player.getUniqueId())) {
+                    // OWNER/TRUSTED = ALWAYS ALLOWED
+                    return;
+                }
+                
+                // NOT owner/trusted - check flag
                 if (!plugin.getFlagManager().getClaimFlag(region, "trampling")) {
                     event.setCancelled(true);
                     return;
@@ -166,25 +175,16 @@ public class ProtectionListener implements Listener {
 
         if (region != null) {
             // IN A CLAIM
-            // Special rule for chests: MUST have access (owner/trusted)
-            if (interactionType.equals("chest-access")) {
-                if (!plugin.getTrustManager().hasAccess(region, player.getUniqueId())) {
-                    // No access to claim = cannot open chests
-                    event.setCancelled(true);
-                    MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
-                    return;
-                }
-                // Has access - allow (chests always allowed for trusted players)
+            // Check if player has access (owner or trusted)
+            if (plugin.getTrustManager().hasAccess(region, player.getUniqueId())) {
+                // OWNER/TRUSTED = ALWAYS ALLOWED (all interactions)
                 return;
             }
             
-            // Other interactions (doors/buttons/levers)
-            if (!plugin.getTrustManager().hasAccess(region, player.getUniqueId())) {
-                // No access = check flag
-                if (!plugin.getFlagManager().getClaimFlag(region, interactionType)) {
-                    event.setCancelled(true);
-                    MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
-                }
+            // NOT owner/trusted - check flag for this interaction type
+            if (!plugin.getFlagManager().getClaimFlag(region, interactionType)) {
+                event.setCancelled(true);
+                MessageUtil.sendProtected(player, plugin.getConfig(), "skittlecities.admin", "/cignoreclaims");
             }
         } else {
             // OUTSIDE claims - check world flag

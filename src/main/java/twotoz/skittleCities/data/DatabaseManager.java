@@ -319,9 +319,15 @@ public class DatabaseManager {
             region.setSignLocation(signLoc);
         }
         
-        Integer parentId = rs.getObject("parent_id", Integer.class);
-        if (parentId != null) {
-            region.setParentId(parentId);
+        // Safe parent_id loading - handle NULL and invalid values
+        try {
+            Integer parentId = rs.getObject("parent_id", Integer.class);
+            if (parentId != null) {
+                region.setParentId(parentId);
+            }
+        } catch (SQLException e) {
+            // parent_id is NULL or invalid - this is fine for non-subclaims
+            region.setParentId(null);
         }
 
         return region;

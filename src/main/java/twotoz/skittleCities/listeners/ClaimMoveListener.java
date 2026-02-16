@@ -67,8 +67,14 @@ public class ClaimMoveListener implements Listener {
                 }
             }
 
-            // Thread-safe update
-            playerLastRegion.put(player.getUniqueId(), currentRegion);
+            // Thread-safe update - ConcurrentHashMap doesn't accept null values!
+            // Store null regions as special marker to avoid NPE
+            if (currentRegion != null) {
+                playerLastRegion.put(player.getUniqueId(), currentRegion);
+            } else {
+                // Remove entry when entering wilderness (null region)
+                playerLastRegion.remove(player.getUniqueId());
+            }
         }
     }
     
