@@ -51,12 +51,8 @@ public class RegionCreateCommand implements CommandExecutor {
                     parentClaim.getDisplayName() : parentClaim.getName();
                 
                 player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                    "&eYour selection is inside claim: &a" + claimName));
-                player.sendMessage(MessageUtil.colorize("&7"));
-                player.sendMessage(MessageUtil.colorize("&cYou cannot create a claim inside another claim!"));
-                player.sendMessage(MessageUtil.colorize("&7"));
-                player.sendMessage(MessageUtil.colorize("&aDid you mean to create a &esubclaim&a?"));
-                player.sendMessage(MessageUtil.colorize("&7Use: &e/csubclaim <name>"));
+                    "&eRegion inside claim: &a" + claimName));
+                player.sendMessage(MessageUtil.colorize("&7Use &e/csubclaim &7to make a subclaim."));
                 return true;
             }
             case PARTIAL_OVERLAP -> {
@@ -68,11 +64,11 @@ public class RegionCreateCommand implements CommandExecutor {
                 player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
                     "&cYour selection overlaps with claim: &e" + claimName));
                 player.sendMessage(MessageUtil.colorize("&7"));
-                player.sendMessage(MessageUtil.colorize("&cYour selection is both inside AND outside a claim!"));
+                player.sendMessage(MessageUtil.colorize("&cSelection is partly in claim and partly in wilderness!"));
                 player.sendMessage(MessageUtil.colorize("&cYou cannot create a claim or subclaim here."));
                 player.sendMessage(MessageUtil.colorize("&7"));
                 player.sendMessage(MessageUtil.colorize("&7Options:"));
-                player.sendMessage(MessageUtil.colorize("&e1. &7Make selection fully INSIDE the claim → use /csubclaim"));
+                player.sendMessage(MessageUtil.colorize("&e1. &7Make selection fully INSIDE claim → use /csubclaim"));
                 player.sendMessage(MessageUtil.colorize("&e2. &7Make selection fully OUTSIDE all claims → use /cregioncreate"));
                 return true;
             }

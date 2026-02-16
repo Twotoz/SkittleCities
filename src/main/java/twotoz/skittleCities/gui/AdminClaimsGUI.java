@@ -48,20 +48,47 @@ public class AdminClaimsGUI implements Listener {
             Region region = allClaims.get(i);
             
             Material material;
-            switch (region.getType()) {
-                case FOR_HIRE -> material = Material.GOLD_BLOCK;
-                case FOR_SALE -> material = Material.DIAMOND_BLOCK;
-                case SAFEZONE -> material = Material.EMERALD_BLOCK;
-                default -> material = Material.STONE;
+            if (region.isSubclaim()) {
+                // SUBCLAIMS = CYAN WOOL (blue-ish)
+                material = Material.CYAN_WOOL;
+            } else {
+                // Normal claims based on type
+                switch (region.getType()) {
+                    case FOR_HIRE -> material = Material.GOLD_BLOCK;
+                    case FOR_SALE -> material = Material.DIAMOND_BLOCK;
+                    case SAFEZONE -> material = Material.EMERALD_BLOCK;
+                    default -> material = Material.STONE;
+                }
             }
             
             ItemStack item = new ItemStack(material);
             ItemMeta meta = item.getItemMeta();
-            meta.setDisplayName(MessageUtil.colorize("&6" + region.getName()));
+            
+            // Display name
+            if (region.isSubclaim()) {
+                Region parent = plugin.getRegionManager().getParentClaim(region);
+                String parentName = parent != null && parent.getDisplayName() != null ? 
+                    parent.getDisplayName() : (parent != null ? parent.getName() : "Unknown");
+                meta.setDisplayName(MessageUtil.colorize("&b[SUBCLAIM] &e" + parentName));
+            } else {
+                String displayName = region.getDisplayName() != null ? region.getDisplayName() : region.getName();
+                meta.setDisplayName(MessageUtil.colorize("&6" + displayName));
+            }
             
             List<String> lore = new ArrayList<>();
             lore.add(MessageUtil.colorize("&7ID: &e" + region.getId()));
-            lore.add(MessageUtil.colorize("&7Type: &e" + region.getType().name()));
+            
+            if (region.isSubclaim()) {
+                lore.add(MessageUtil.colorize("&7Type: &bSUBCLAIM"));
+                Region parent = plugin.getRegionManager().getParentClaim(region);
+                if (parent != null) {
+                    String parentName = parent.getDisplayName() != null ? parent.getDisplayName() : parent.getName();
+                    lore.add(MessageUtil.colorize("&7Parent: &e" + parentName + " &7(ID: " + parent.getId() + ")"));
+                }
+                lore.add(MessageUtil.colorize("&7Technical: &f" + region.getName()));
+            } else {
+                lore.add(MessageUtil.colorize("&7Type: &e" + region.getType().name()));
+            }
             
             String ownerName = "None";
             if (region.getOwner() != null) {
@@ -75,7 +102,7 @@ public class AdminClaimsGUI implements Listener {
                 (int)region.getCenter().getY() + ", " + 
                 (int)region.getCenter().getZ()));
             
-            if (region.getType() == Region.RegionType.FOR_HIRE || region.getType() == Region.RegionType.FOR_SALE) {
+            if (!region.isSubclaim() && (region.getType() == Region.RegionType.FOR_HIRE || region.getType() == Region.RegionType.FOR_SALE)) {
                 lore.add(MessageUtil.colorize("&7Price: &e$" + region.getPrice()));
             }
             

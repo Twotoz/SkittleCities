@@ -28,8 +28,26 @@ public class FlagsGUI implements Listener {
         this.player = player;
         this.region = region;
         this.isWorldFlags = (region == null);
-        this.inventory = plugin.getServer().createInventory(null, 54, 
-            isWorldFlags ? "World Flags" : "Claim Flags");
+        
+        // Build title based on claim type
+        String title;
+        if (isWorldFlags) {
+            title = "World Flags";
+        } else if (region.isSubclaim()) {
+            // Show as "Subclaim Flags: [name] (Parent)"
+            String name = region.getDisplayName() != null ? region.getDisplayName() : region.getName();
+            Region parent = plugin.getRegionManager().getParentClaim(region);
+            String parentName = parent != null && parent.getDisplayName() != null ? 
+                parent.getDisplayName() : (parent != null ? parent.getName() : "?");
+            title = "Subclaim: " + name.substring(0, Math.min(name.length(), 15)) + 
+                    " (" + parentName.substring(0, Math.min(parentName.length(), 10)) + ")";
+        } else {
+            // Normal claim
+            String name = region.getDisplayName() != null ? region.getDisplayName() : region.getName();
+            title = "Flags: " + name.substring(0, Math.min(name.length(), 25));
+        }
+        
+        this.inventory = plugin.getServer().createInventory(null, 54, title);
         
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         setupInventory();

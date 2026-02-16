@@ -1,6 +1,5 @@
 package twotoz.skittleCities.commands;
 
-import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -30,21 +29,6 @@ public class CreateSubclaimCommand implements CommandExecutor {
             return true;
         }
 
-        if (args.length < 1) {
-            player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                "&cUsage: /csubclaim <name>"));
-            player.sendMessage(MessageUtil.colorize("&7Create a subclaim within a claim (admin only)"));
-            player.sendMessage(MessageUtil.colorize("&71. Use &e/ctool &7to select area"));
-            player.sendMessage(MessageUtil.colorize("&72. Stand in parent claim"));
-            player.sendMessage(MessageUtil.colorize("&73. Run &e/csubclaim <name>"));
-            player.sendMessage(MessageUtil.colorize("&7"));
-            player.sendMessage(MessageUtil.colorize("&eSubclaims override parent flags!"));
-            player.sendMessage(MessageUtil.colorize("&7Example: Parent has block-break:false, subclaim can have block-break:true"));
-            return true;
-        }
-
-        String name = String.join("_", args);
-
         // Get selection
         Selection selection = plugin.getSelectionManager().getSelection(player);
         if (selection == null || !selection.isComplete()) {
@@ -71,11 +55,15 @@ public class CreateSubclaimCommand implements CommandExecutor {
             return true;
         }
 
+        // Generate unique technical name
+        String technicalName = generateSubclaimName(parentRegion);
+
         // Create subclaim region
-        Region subclaim = new Region(0, name, player.getWorld(), selection.getPos1(), selection.getPos2());
+        Region subclaim = new Region(0, technicalName, player.getWorld(), selection.getPos1(), selection.getPos2());
         subclaim.setOwner(parentRegion.getOwner()); // SAME OWNER AS PARENT!
         subclaim.setType(Region.RegionType.PRIVATE);
         subclaim.setParentId(parentRegion.getId()); // SET PARENT!
+        // NO display name - uses parent name
 
         // Verify subclaim is completely inside parent
         if (!isCompletelyInside(subclaim, parentRegion)) {
@@ -86,30 +74,28 @@ public class CreateSubclaimCommand implements CommandExecutor {
                 "&cSubclaim must be completely inside the parent claim!"));
             player.sendMessage(MessageUtil.colorize("&7"));
             player.sendMessage(MessageUtil.colorize("&eYour selection extends outside of: &a" + parentName));
-            player.sendMessage(MessageUtil.colorize("&7Make sure your selection is fully within the claim boundaries."));
+            player.sendMessage(MessageUtil.colorize("&7Selection is partly in claim and partly in wilderness."));
             player.sendMessage(MessageUtil.colorize("&7"));
-            player.sendMessage(MessageUtil.colorize("&7Parent claim boundaries:"));
-            player.sendMessage(MessageUtil.colorize("  &7X: &f" + parentRegion.getMinX() + " &7to &f" + parentRegion.getMaxX()));
-            player.sendMessage(MessageUtil.colorize("  &7Y: &f" + parentRegion.getMinY() + " &7to &f" + parentRegion.getMaxY()));
-            player.sendMessage(MessageUtil.colorize("  &7Z: &f" + parentRegion.getMinZ() + " &7to &f" + parentRegion.getMaxZ()));
+            player.sendMessage(MessageUtil.colorize("&cYou cannot create a subclaim that extends outside the parent claim!"));
+            player.sendMessage(MessageUtil.colorize("&7Make sure your selection is fully within the claim boundaries."));
             return true;
         }
 
-        // Check overlap with OTHER subclaims (not parent)
+        // Check overlap with OTHER claims (not parent)
         for (Region existing : plugin.getRegionManager().getAllRegions()) {
-            // Skip the parent (subclaim is inside parent by design)
+            // Skip parent claim
             if (existing.getId() == parentRegion.getId()) continue;
             
-            // Skip if existing is also a subclaim of same parent (we'll check volume priority)
-            if (existing.getParentId() != null && existing.getParentId() == parentRegion.getId()) {
-                // Allow if new subclaim is smaller (will have priority)
-                continue;
-            }
-            
-            // Check partial overlap
-            if (subclaim.overlaps(existing) && !isCompletelyInside(subclaim, existing)) {
+            // Check if subclaim overlaps with another claim
+            if (subclaim.overlaps(existing)) {
+                String existingName = existing.getDisplayName() != null ? 
+                    existing.getDisplayName() : existing.getName();
+                
                 player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                    "&cThis area overlaps with another claim!"));
+                    "&cYour subclaim overlaps with another claim: &e" + existingName));
+                player.sendMessage(MessageUtil.colorize("&7"));
+                player.sendMessage(MessageUtil.colorize("&cSubclaims cannot overlap with other claims!"));
+                player.sendMessage(MessageUtil.colorize("&7Keep your subclaim within the parent claim boundaries."));
                 return true;
             }
         }
@@ -126,28 +112,51 @@ public class CreateSubclaimCommand implements CommandExecutor {
         // Clear selection
         plugin.getSelectionManager().clearSelection(player);
 
+        String parentName = parentRegion.getDisplayName() != null ? 
+            parentRegion.getDisplayName() : parentRegion.getName();
+        
         player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-            "&aSubclaim &e" + name + " &acreated inside &e" + 
-            (parentRegion.getDisplayName() != null ? parentRegion.getDisplayName() : parentRegion.getName())));
-        player.sendMessage(MessageUtil.colorize("&7→ Owner: &eSame as parent claim"));
+            "&aSubclaim created inside &e" + parentName));
+        player.sendMessage(MessageUtil.colorize("&7→ Technical name: &f" + technicalName));
+        player.sendMessage(MessageUtil.colorize("&7→ Uses parent name when displaying"));
         player.sendMessage(MessageUtil.colorize("&7→ Flags: &eCopied from parent (customize with /cflags)"));
-        player.sendMessage(MessageUtil.colorize("&7→ Trust: &eInherited from parent"));
-        player.sendMessage(MessageUtil.colorize(""));
+        player.sendMessage(MessageUtil.colorize("&7"));
         player.sendMessage(MessageUtil.colorize("&eSubclaim flags OVERRIDE parent flags!"));
-        player.sendMessage(MessageUtil.colorize("&7Example: Parent has block-break:false, subclaim can set block-break:true"));
 
         return true;
     }
-
+    
     /**
-     * Check if subclaim is completely inside parent
+     * Generate unique technical name for subclaim
+     */
+    private String generateSubclaimName(Region parentRegion) {
+        int counter = 1;
+        String baseName = "subclaim_" + parentRegion.getId() + "_";
+        
+        while (true) {
+            String name = baseName + counter;
+            boolean exists = false;
+            
+            for (Region r : plugin.getRegionManager().getAllRegions()) {
+                if (r.getName().equals(name)) {
+                    exists = true;
+                    break;
+                }
+            }
+            
+            if (!exists) {
+                return name;
+            }
+            counter++;
+        }
+    }
+    
+    /**
+     * Check if inner region is completely inside outer region
      */
     private boolean isCompletelyInside(Region inner, Region outer) {
-        return inner.getMinX() >= outer.getMinX() &&
-               inner.getMaxX() <= outer.getMaxX() &&
-               inner.getMinY() >= outer.getMinY() &&
-               inner.getMaxY() <= outer.getMaxY() &&
-               inner.getMinZ() >= outer.getMinZ() &&
-               inner.getMaxZ() <= outer.getMaxZ();
+        return inner.getMinX() >= outer.getMinX() && inner.getMaxX() <= outer.getMaxX() &&
+               inner.getMinY() >= outer.getMinY() && inner.getMaxY() <= outer.getMaxY() &&
+               inner.getMinZ() >= outer.getMinZ() && inner.getMaxZ() <= outer.getMaxZ();
     }
 }
