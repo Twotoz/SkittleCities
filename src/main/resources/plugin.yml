@@ -131,6 +131,11 @@ commands:
     description: Get the menu item (for testing)
     usage: /cgetmenuitem
     permission: skittlecities.player
+    
+  cmigrate:
+    description: Migrate database - add missing flags to existing claims (admin only)
+    usage: /cmigrate
+    permission: skittlecities.admin
 
 permissions:
   skittlecities.admin:

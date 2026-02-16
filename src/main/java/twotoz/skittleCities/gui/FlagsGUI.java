@@ -102,13 +102,16 @@ public class FlagsGUI implements Listener {
             case "block-place" -> "place blocks";
             case "pvp" -> "fight other players";
             case "chest-access" -> "open chests";
-            case "door-access" -> "use doors";
-            case "button-access" -> "use buttons/levers";
+            case "use-doors" -> "use doors";
+            case "use-trapdoors" -> "use trapdoors";
+            case "use-buttons" -> "use buttons";
+            case "use-levers" -> "use levers";
             case "mob-spawning" -> "spawn (mobs)";
             case "trampling" -> "trample farmland";
-            case "block-spread" -> "spread (blocks)";
-            case "crop-growth" -> "grow (crops)";
-            case "fly" -> "fly";
+            case "plant-growth" -> "grow (plants/crops)";
+            case "entity-damage" -> "damage entities";
+            case "explosion" -> "cause explosions";
+            case "fire-spread" -> "spread fire";
             default -> "do this";
         };
     }

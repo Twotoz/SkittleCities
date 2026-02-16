@@ -19,6 +19,7 @@ import twotoz.skittleCities.listeners.WorldChangeListener;
 import twotoz.skittleCities.managers.*;
 import twotoz.skittleCities.tasks.LeaseCheckTask;
 import twotoz.skittleCities.tasks.SignCheckTask;
+import twotoz.skittleCities.data.Region;
 
 public final class SkittleCities extends JavaPlugin {
     
@@ -59,6 +60,9 @@ public final class SkittleCities extends JavaPlugin {
 
         // Load regions from database
         regionManager.loadRegions();
+        
+        // AUTO-MIGRATION: Add missing flags to existing claims
+        runAutoMigration();
 
         // Register commands
         getCommand("ctool").setExecutor(new ToolCommand(this));
@@ -111,6 +115,7 @@ public final class SkittleCities extends JavaPlugin {
         
         getCommand("creload").setExecutor(new ReloadCommand(this));
         getCommand("cgetmenuitem").setExecutor(new GetMenuItemCommand(this));
+        getCommand("cmigrate").setExecutor(new MigrateCommand(this));
 
         // Register listeners
         getServer().getPluginManager().registerEvents(new ProtectionListener(this), this);
@@ -124,6 +129,7 @@ public final class SkittleCities extends JavaPlugin {
         
         menuItemListener = new MenuItemListener(this);
         getServer().getPluginManager().registerEvents(menuItemListener, this);
+        menuItemListener.startPeriodicCheck(); // Start 5-second enforcement check
         
         FlyBlockListener flyBlockListener = new FlyBlockListener(this);
         getServer().getPluginManager().registerEvents(flyBlockListener, this);
@@ -163,6 +169,60 @@ public final class SkittleCities extends JavaPlugin {
         }
 
         getLogger().info("SkittleCities has been disabled!");
+    }
+    
+    /**
+     * Auto-migration: Add missing flags to existing claims
+     * Runs automatically on startup to handle plugin updates
+     */
+    private void runAutoMigration() {
+        getLogger().info("Running database auto-migration...");
+        
+        int totalRegions = 0;
+        int updated = 0;
+        
+        // Get default flags from config
+        org.bukkit.configuration.ConfigurationSection flagsSection = 
+            getConfig().getConfigurationSection("default-claim-flags");
+        
+        if (flagsSection == null) {
+            getLogger().warning("No default-claim-flags section found in config!");
+            return;
+        }
+        
+        java.util.Map<String, Object> defaultFlags = flagsSection.getValues(false);
+        
+        // Check all regions for missing flags
+        for (Region region : regionManager.getAllRegions()) {
+            boolean needsUpdate = false;
+            
+            for (java.util.Map.Entry<String, Object> entry : defaultFlags.entrySet()) {
+                String flagName = entry.getKey();
+                
+                // If region doesn't have this flag, add it
+                if (!region.getFlags().containsKey(flagName)) {
+                    region.getFlags().put(flagName, (Boolean) entry.getValue());
+                    needsUpdate = true;
+                    getLogger().info("  Adding missing flag '" + flagName + "' to region: " + region.getName());
+                }
+            }
+            
+            if (needsUpdate) {
+                databaseManager.updateRegion(region);
+                updated++;
+            }
+            
+            totalRegions++;
+        }
+        
+        if (updated > 0) {
+            getLogger().info("Auto-migration complete! Updated " + updated + "/" + totalRegions + " regions with missing flags.");
+        } else {
+            getLogger().info("Auto-migration complete! All " + totalRegions + " regions up to date.");
+        }
+        
+        // Reload regions to ensure cache is fresh
+        regionManager.loadRegions();
     }
 
     // Getters

@@ -24,6 +24,31 @@ public class MenuItemListener implements Listener {
     public MenuItemListener(SkittleCities plugin) {
         this.plugin = plugin;
     }
+    
+    /**
+     * Start periodic check to ensure menu items are only in city world
+     * Runs every 5 seconds to catch any edge cases
+     */
+    public void startPeriodicCheck() {
+        plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
+            String cityWorld = plugin.getConfig().getString("world-name", "city");
+            
+            for (Player player : plugin.getServer().getOnlinePlayers()) {
+                boolean inCityWorld = player.getWorld().getName().equalsIgnoreCase(cityWorld);
+                boolean hasMenuItem = hasMenuItem(player);
+                
+                if (inCityWorld && !hasMenuItem) {
+                    // In city but no item - give it
+                    giveMenuItem(player);
+                } else if (!inCityWorld && hasMenuItem) {
+                    // NOT in city but has item - REMOVE IT!
+                    removeMenuItem(player);
+                    plugin.getLogger().warning("Removed menu item from " + player.getName() + 
+                        " (was in wrong world: " + player.getWorld().getName() + ")");
+                }
+            }
+        }, 20L * 5, 20L * 5); // Every 5 seconds
+    }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -35,7 +60,7 @@ public class MenuItemListener implements Listener {
         
         plugin.getLogger().info("Player " + player.getName() + " joined in world: " + playerWorld + " (city world: " + cityWorld + ")");
         
-        if (!playerWorld.equals(cityWorld)) {
+        if (!playerWorld.equalsIgnoreCase(cityWorld)) {
             plugin.getLogger().info("Not in city world, skipping menu item");
             return;
         }
@@ -44,7 +69,12 @@ public class MenuItemListener implements Listener {
         
         // Delay 1 tick to ensure player is fully loaded
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-            giveMenuItem(player);
+            // Double-check player is STILL in city world (they might have switched)
+            if (player.getWorld().getName().equalsIgnoreCase(cityWorld)) {
+                giveMenuItem(player);
+            } else {
+                plugin.getLogger().info("Player " + player.getName() + " switched worlds before receiving menu item");
+            }
         }, 1L);
     }
 
@@ -54,7 +84,7 @@ public class MenuItemListener implements Listener {
         
         // Only give menu item if respawning in city world
         String cityWorld = plugin.getConfig().getString("world-name", "city");
-        if (!event.getRespawnLocation().getWorld().getName().equals(cityWorld)) {
+        if (!event.getRespawnLocation().getWorld().getName().equalsIgnoreCase(cityWorld)) {
             return;
         }
         
@@ -64,17 +94,20 @@ public class MenuItemListener implements Listener {
         }, 1L);
     }
 
-    @EventHandler
+    @EventHandler(priority = org.bukkit.event.EventPriority.HIGHEST)
     public void onWorldChange(PlayerChangedWorldEvent event) {
         Player player = event.getPlayer();
         String cityWorld = plugin.getConfig().getString("world-name", "city");
         
-        if (player.getWorld().getName().equals(cityWorld)) {
+        // ALWAYS remove menu item first (clean slate)
+        removeMenuItem(player);
+        
+        // Then check if we should give it
+        if (player.getWorld().getName().equalsIgnoreCase(cityWorld)) {
             // Entered city world - give menu item
-            giveMenuItem(player);
-        } else {
-            // Left city world - remove menu item
-            removeMenuItem(player);
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                giveMenuItem(player);
+            }, 1L);
         }
     }
 
@@ -105,7 +138,7 @@ public class MenuItemListener implements Listener {
 
         // Only work in city world
         String cityWorld = plugin.getConfig().getString("world-name", "city");
-        if (!player.getWorld().getName().equals(cityWorld)) {
+        if (!player.getWorld().getName().equalsIgnoreCase(cityWorld)) {
             return;
         }
 
@@ -127,13 +160,26 @@ public class MenuItemListener implements Listener {
      * Give menu item to player if they don't have it (PUBLIC - called from commands)
      */
     public void giveMenuItemIfNeeded(Player player) {
-        giveMenuItem(player);
+        // CRITICAL: Only give if in city world
+        String cityWorld = plugin.getConfig().getString("world-name", "city");
+        if (player.getWorld().getName().equalsIgnoreCase(cityWorld)) {
+            giveMenuItem(player);
+        }
     }
 
     /**
      * Give menu item to player if they don't have it
+     * ASSUMES world check already done by caller!
      */
     private void giveMenuItem(Player player) {
+        // Double-check world (safety)
+        String cityWorld = plugin.getConfig().getString("world-name", "city");
+        if (!player.getWorld().getName().equalsIgnoreCase(cityWorld)) {
+            plugin.getLogger().warning("Attempted to give menu item to " + player.getName() + 
+                " in wrong world: " + player.getWorld().getName());
+            return;
+        }
+        
         // Check if player already has menu item
         if (hasMenuItem(player)) {
             return;

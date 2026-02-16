@@ -41,7 +41,17 @@ public class RegionManager {
 
     public void updateRegion(Region region) {
         plugin.getDatabaseManager().updateRegion(region);
-        regionCache.invalidateAll(); // Invalidate cache when region updates
+        
+        // CRITICAL: Reload the region from database to get updated flags
+        Region reloaded = plugin.getDatabaseManager().getRegionById(region.getId());
+        if (reloaded != null) {
+            // Replace in regions list
+            regions.removeIf(r -> r.getId() == region.getId());
+            regions.add(reloaded);
+            regionCache.setRegions(regions); // Rebuild cache with fresh data
+        } else {
+            regionCache.invalidateAll(); // Fallback: just invalidate
+        }
         
         // If this is a parent claim and owner changed, update all subclaims
         if (!region.isSubclaim()) {

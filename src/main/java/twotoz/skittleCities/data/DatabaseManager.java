@@ -286,6 +286,26 @@ public class DatabaseManager {
         return regions;
     }
 
+    public Region getRegionById(int id) {
+        String sql = "SELECT * FROM regions WHERE id = ?";
+        
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            ResultSet rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                Region region = buildRegionFromResultSet(rs);
+                loadRegionFlags(region);
+                loadRegionTrust(region);
+                return region;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        return null;
+    }
+
     private Region buildRegionFromResultSet(ResultSet rs) throws SQLException {
         int id = rs.getInt("id");
         String name = rs.getString("name");

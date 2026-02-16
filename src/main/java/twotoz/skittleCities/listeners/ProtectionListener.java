@@ -5,7 +5,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockGrowEvent;
+import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.block.SignChangeEvent;
@@ -475,10 +477,61 @@ public class ProtectionListener implements Listener {
                  MAGENTA_SHULKER_BOX, ORANGE_SHULKER_BOX, PINK_SHULKER_BOX,
                  PURPLE_SHULKER_BOX, RED_SHULKER_BOX, WHITE_SHULKER_BOX,
                  YELLOW_SHULKER_BOX -> "chest-access";
-            case LEVER, STONE_BUTTON, OAK_BUTTON, SPRUCE_BUTTON, BIRCH_BUTTON,
+            case STONE_BUTTON, OAK_BUTTON, SPRUCE_BUTTON, BIRCH_BUTTON,
                  JUNGLE_BUTTON, ACACIA_BUTTON, DARK_OAK_BUTTON, CRIMSON_BUTTON,
-                 WARPED_BUTTON, POLISHED_BLACKSTONE_BUTTON -> "button-access";
+                 WARPED_BUTTON, POLISHED_BLACKSTONE_BUTTON -> "use-buttons";
+            case LEVER -> "use-levers";
             default -> null;
         };
+    }
+    
+    @EventHandler
+    public void onBlockBurn(BlockBurnEvent event) {
+        if (!isInConfiguredWorld(event.getBlock().getWorld())) return;
+        
+        Region region = plugin.getRegionManager().getRegionAt(event.getBlock().getLocation());
+        
+        if (region != null) {
+            // IN CLAIM - check flag
+            if (!plugin.getFlagManager().getClaimFlag(region, "fire-spread")) {
+                event.setCancelled(true);
+            }
+        } else {
+            // OUTSIDE claims - check world flag
+            if (!plugin.getFlagManager().getWorldFlag("fire-spread")) {
+                event.setCancelled(true);
+            }
+        }
+    }
+    
+    @EventHandler
+    public void onBlockIgnite(BlockIgniteEvent event) {
+        if (!isInConfiguredWorld(event.getBlock().getWorld())) return;
+        
+        // Allow flint & steel and fire charges (player controlled)
+        if (event.getCause() == BlockIgniteEvent.IgniteCause.FLINT_AND_STEEL ||
+            event.getCause() == BlockIgniteEvent.IgniteCause.FIREBALL) {
+            return;
+        }
+        
+        // Block natural fire spread (lava, fire, lightning)
+        Region region = plugin.getRegionManager().getRegionAt(event.getBlock().getLocation());
+        
+        if (region != null) {
+            // IN CLAIM - check flag
+            if (!plugin.getFlagManager().getClaimFlag(region, "fire-spread")) {
+                event.setCancelled(true);
+            }
+        } else {
+            // OUTSIDE claims - check world flag
+            if (!plugin.getFlagManager().getWorldFlag("fire-spread")) {
+                event.setCancelled(true);
+            }
+        }
+    }
+    
+    private boolean isInConfiguredWorld(org.bukkit.World world) {
+        String configWorld = plugin.getConfig().getString("world-name", "city");
+        return world.getName().equalsIgnoreCase(configWorld);
     }
 }
