@@ -1,7 +1,7 @@
 # SkittleCities Configuration
 
 # World where the plugin is active
-world-name: city
+world-name: City
 
 # City spawn location (set with /setcityspawn)
 city-spawn:
