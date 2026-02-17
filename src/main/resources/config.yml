@@ -23,6 +23,18 @@ leave-city-spawn:
   yaw: 0
   pitch: 0
 
+# Hospital spawn location (set with /setcityhospitalspawn)
+# Players who die in the city respawn here
+# Falls back to city-spawn if not configured
+hospital-spawn:
+  configured: false
+  world: City
+  x: -4.5
+  y: 1
+  z: -6.5
+  yaw: 0
+  pitch: 0
+
 # Commands that ARE allowed in the city world
 # All other commands will be blocked in the city
 # Outside the city = no restrictions

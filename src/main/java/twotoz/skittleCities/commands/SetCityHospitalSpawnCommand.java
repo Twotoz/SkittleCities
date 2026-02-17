@@ -28,6 +28,7 @@ public class SetCityHospitalSpawnCommand implements CommandExecutor {
         }
 
         org.bukkit.Location loc = player.getLocation();
+        plugin.getConfig().set("hospital-spawn.configured", true);
         plugin.getConfig().set("hospital-spawn.world", loc.getWorld().getName());
         plugin.getConfig().set("hospital-spawn.x", loc.getX());
         plugin.getConfig().set("hospital-spawn.y", loc.getY());

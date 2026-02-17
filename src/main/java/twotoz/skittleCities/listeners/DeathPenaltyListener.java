@@ -68,19 +68,16 @@ public class DeathPenaltyListener implements Listener {
 
         if (!diedInCity.remove(player.getUniqueId())) return;
 
-        // Get hospital spawn
-        String hospitalWorld = plugin.getConfig().getString("hospital-spawn.world");
-        if (hospitalWorld == null) {
-            // Hospital not set - fall back to city spawn
-            hospitalWorld = plugin.getConfig().getString("city-spawn.world",
-                plugin.getConfig().getString("world-name"));
-        }
+        // Check if hospital spawn has been explicitly configured
+        String section = plugin.getConfig().getBoolean("hospital-spawn.configured", false)
+            ? "hospital-spawn"
+            : "city-spawn";
 
-        World world = plugin.getServer().getWorld(hospitalWorld);
+        String worldName = plugin.getConfig().getString(section + ".world",
+            plugin.getConfig().getString("world-name"));
+
+        World world = plugin.getServer().getWorld(worldName);
         if (world == null) return;
-
-        String section = plugin.getConfig().isSet("hospital-spawn.x") ?
-            "hospital-spawn" : "city-spawn";
 
         double x = plugin.getConfig().getDouble(section + ".x");
         double y = plugin.getConfig().getDouble(section + ".y");
