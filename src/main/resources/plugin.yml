@@ -63,7 +63,11 @@ commands:
     description: Teleport to the city
     usage: /city
     permission: skittlecities.player
-    aliases: [cspawn]
+    
+  cspawn:
+    description: Teleport to city spawn (3 second delay, blocked in combat)
+    usage: /cspawn
+    permission: skittlecities.player
     
   leavecity:
     description: Leave the city and return to server spawn
@@ -79,6 +83,11 @@ commands:
   setcityspawn:
     description: Set the city spawn location
     usage: /setcityspawn
+    permission: skittlecities.admin
+    
+  setcityhospitalspawn:
+    description: Set the hospital respawn location for players who die in the city
+    usage: /setcityhospitalspawn
     permission: skittlecities.admin
     
   setleavespawn:

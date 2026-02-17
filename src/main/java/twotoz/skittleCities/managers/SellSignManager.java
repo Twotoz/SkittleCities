@@ -7,236 +7,210 @@ import org.bukkit.inventory.ItemStack;
 import twotoz.skittleCities.SkittleCities;
 import twotoz.skittleCities.utils.MessageUtil;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 public class SellSignManager {
     private final SkittleCities plugin;
-    
+    private final Map<UUID, Map<Integer, PendingBatch>> pendingBatches = new HashMap<>();
+
     public SellSignManager(SkittleCities plugin) {
         this.plugin = plugin;
     }
-    
-    /**
-     * Check if sign is a valid sell OR buy sign
-     */
+
+    private static class PendingBatch {
+        int amount = 0;
+        double total = 0;
+        String materialName = "";
+        boolean isSell;
+        org.bukkit.scheduler.BukkitTask task = null;
+    }
+
     public boolean isSellSign(Sign sign) {
         if (sign.getLine(0).isEmpty()) return false;
         String line0 = org.bukkit.ChatColor.stripColor(sign.getLine(0));
         return line0.equalsIgnoreCase("[SELL]") || line0.equalsIgnoreCase("[BUY]");
     }
-    
-    /**
-     * Create a sign (SELL or BUY)
-     * @param sign The sign block
-     * @param material The material to trade
-     * @param price Price per item
-     * @param isBuySign true = [BUY] sign (player sells), false = [SELL] sign (player buys)
-     */
+
     public void createSign(Sign sign, Material material, double price, boolean isBuySign) {
-        String signType = isBuySign ? "[BUY]" : "[SELL]";
-        String statLabel = isBuySign ? "Sold" : "Bought";
-        
+        String signType = isBuySign ? "[buy]" : "[sell]";
         sign.setLine(0, MessageUtil.colorize("&9&l" + signType));
-        sign.setLine(1, MessageUtil.colorize("&e" + material.name()));
+        sign.setLine(1, MessageUtil.colorize("&e" + formatMaterialName(material)));
         sign.setLine(2, MessageUtil.colorize("&6$" + String.format("%.2f", price) + " &7each"));
-        sign.setLine(3, MessageUtil.colorize("&7" + statLabel + ": &e0"));
+        sign.setLine(3, MessageUtil.colorize("&7Total: &e0"));
         sign.update();
     }
-    
-    /**
-     * Get material from sign
-     */
+
+    private String formatMaterialName(Material m) {
+        return m.name().toLowerCase().replace("_", " ");
+    }
+
     public Material getMaterial(Sign sign) {
         try {
-            String materialName = org.bukkit.ChatColor.stripColor(sign.getLine(1)).toUpperCase();
-            return Material.valueOf(materialName);
+            String name = org.bukkit.ChatColor.stripColor(sign.getLine(1)).trim().toUpperCase().replace(" ", "_");
+            return Material.valueOf(name);
         } catch (IllegalArgumentException e) {
             return null;
         }
     }
-    
-    /**
-     * Get price per item from sign
-     */
+
     public double getPrice(Sign sign) {
         try {
-            String priceLine = org.bukkit.ChatColor.stripColor(sign.getLine(2));
-            // Remove $, "each", spaces
-            priceLine = priceLine.replace("$", "").replace("each", "").trim();
-            return Double.parseDouble(priceLine);
+            String line = org.bukkit.ChatColor.stripColor(sign.getLine(2));
+            line = line.replace("$", "").replace("each", "").trim();
+            return Double.parseDouble(line);
         } catch (NumberFormatException e) {
             return 0.0;
         }
     }
-    
-    /**
-     * Handle player clicking on sign
-     */
-    public void handleSell(Player player, Sign sign) {
-        String line0 = org.bukkit.ChatColor.stripColor(sign.getLine(0));
-        
-        if (line0.equalsIgnoreCase("[SELL]")) {
-            // [SELL] sign = Player BUYS from server
+
+    /** Main entry point - called from SignListener */
+    public void handleSign(Player player, Sign sign, boolean shiftClick) {
+        String line0 = org.bukkit.ChatColor.stripColor(sign.getLine(0)).toLowerCase().trim();
+        if (line0.equals("[sell]")) {
+            handlePlayerSell(player, sign, shiftClick);
+        } else if (line0.equals("[buy]")) {
             handlePlayerBuy(player, sign);
-        } else if (line0.equalsIgnoreCase("[BUY]")) {
-            // [BUY] sign = Player SELLS to server
-            handlePlayerSell(player, sign);
         }
     }
-    
-    /**
-     * [SELL] Sign - Player BUYS items FROM server
-     * Player pays money, gets items
-     */
+
+    // Keep old method name for compatibility with existing SignListener call
+    public void handleSell(Player player, Sign sign) {
+        handleSign(player, sign, false);
+    }
+
+    // ── [sell] sign: player SELLS items ──────────────────────────────────────
+
+    private void handlePlayerSell(Player player, Sign sign, boolean shiftClick) {
+        Material material = getMaterial(sign);
+        if (material == null) {
+            plugin.getActionBarManager().sendTemporary(player, MessageUtil.colorize("&cInvalid sign!"));
+            return;
+        }
+        double price = getPrice(sign);
+        if (price <= 0) {
+            plugin.getActionBarManager().sendTemporary(player, MessageUtil.colorize("&cInvalid price!"));
+            return;
+        }
+
+        int amount = shiftClick ? countItems(player, material) : 1;
+        if (amount == 0) {
+            plugin.getActionBarManager().sendTemporary(player,
+                MessageUtil.colorize("&cNo &e" + formatMaterialName(material) + " &cto sell!"));
+            return;
+        }
+
+        int removed = removeItems(player, material, amount);
+        if (removed == 0) return;
+
+        double earnings = removed * price;
+        plugin.getEconomyManager().addBalance(player.getUniqueId(), earnings);
+        updateSignStats(sign, removed);
+        addToBatch(player, sign, removed, earnings, formatMaterialName(material), true);
+    }
+
+    // ── [buy] sign: player BUYS 1 item ───────────────────────────────────────
+
     private void handlePlayerBuy(Player player, Sign sign) {
         Material material = getMaterial(sign);
         if (material == null) {
-            player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                "&cInvalid sign!"));
+            plugin.getActionBarManager().sendTemporary(player, MessageUtil.colorize("&cInvalid sign!"));
             return;
         }
-        
-        double pricePerItem = getPrice(sign);
-        if (pricePerItem <= 0) {
-            player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                "&cInvalid price on sign!"));
+        double price = getPrice(sign);
+        if (price <= 0) {
+            plugin.getActionBarManager().sendTemporary(player, MessageUtil.colorize("&cInvalid price!"));
             return;
         }
-        
-        // Calculate how many items player can afford
+
         double balance = plugin.getEconomyManager().getBalance(player.getUniqueId());
-        int maxAffordable = (int) (balance / pricePerItem);
-        
-        if (maxAffordable == 0) {
-            player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                "&cYou can't afford any &e" + material.name().toLowerCase().replace("_", " ") + "&c!"));
-            player.sendMessage(MessageUtil.colorize("&7Price: &6$" + String.format("%.2f", pricePerItem) + 
-                " &7each | Your balance: &6$" + String.format("%.2f", balance)));
+        if (balance < price) {
+            plugin.getActionBarManager().sendTemporary(player,
+                MessageUtil.colorize("&cNeed &6$" + String.format("%.2f", price) +
+                    " &cbut have &6$" + String.format("%.2f", balance)));
             return;
         }
-        
-        // Check inventory space
-        int availableSlots = 0;
+
+        // Check space for 1 item
+        boolean hasSpace = false;
         for (ItemStack item : player.getInventory().getStorageContents()) {
-            if (item == null || item.getType() == Material.AIR) {
-                availableSlots++;
-            } else if (item.getType() == material && item.getAmount() < item.getMaxStackSize()) {
-                availableSlots++;
+            if (item == null || item.getType() == Material.AIR) { hasSpace = true; break; }
+            if (item.getType() == material && item.getAmount() < item.getMaxStackSize()) { hasSpace = true; break; }
+        }
+        if (!hasSpace) {
+            plugin.getActionBarManager().sendTemporary(player, MessageUtil.colorize("&cInventory full!"));
+            return;
+        }
+
+        plugin.getEconomyManager().removeBalance(player.getUniqueId(), price);
+        player.getInventory().addItem(new ItemStack(material, 1));
+        updateSignStats(sign, 1);
+        addToBatch(player, sign, 1, price, formatMaterialName(material), false);
+    }
+
+    // ── Smart batching ────────────────────────────────────────────────────────
+
+    private void addToBatch(Player player, Sign sign, int amount, double total,
+                            String materialName, boolean isSell) {
+        UUID uuid = player.getUniqueId();
+        int signHash = sign.getLocation().hashCode();
+
+        pendingBatches.computeIfAbsent(uuid, k -> new HashMap<>());
+        PendingBatch batch = pendingBatches.get(uuid).computeIfAbsent(signHash, k -> new PendingBatch());
+        batch.amount += amount;
+        batch.total += total;
+        batch.materialName = materialName;
+        batch.isSell = isSell;
+
+        if (batch.task != null) batch.task.cancel();
+
+        showBatchMessage(player, batch);
+
+        final PendingBatch snap = batch;
+        batch.task = plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            showBatchMessage(player, snap);
+            Map<Integer, PendingBatch> map = pendingBatches.get(uuid);
+            if (map != null) {
+                map.remove(signHash);
+                if (map.isEmpty()) pendingBatches.remove(uuid);
             }
-        }
-        
-        if (availableSlots == 0) {
-            player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                "&cYour inventory is full!"));
-            return;
-        }
-        
-        // Calculate max items based on inventory space (64 per slot)
-        int maxBySpace = availableSlots * 64;
-        
-        // Actual amount to buy (min of affordable and inventory space)
-        int amountToBuy = Math.min(maxAffordable, maxBySpace);
-        
-        // Calculate total cost
-        double totalCost = amountToBuy * pricePerItem;
-        
-        // Remove money
-        plugin.getEconomyManager().removeBalance(player.getUniqueId(), totalCost);
-        
-        // Give items
-        ItemStack items = new ItemStack(material, amountToBuy);
-        player.getInventory().addItem(items);
-        
-        // Send confirmation
-        player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-            "&aBought &e" + amountToBuy + "x " + material.name().toLowerCase().replace("_", " ") + 
-            " &afor &6$" + String.format("%.2f", totalCost)));
-        
-        // Update sign stats (line 3)
-        updateSignStats(sign, amountToBuy, "Bought");
+        }, 20L);
     }
-    
-    /**
-     * [BUY] Sign - Player SELLS items TO server
-     * Player gives items, gets money
-     */
-    private void handlePlayerSell(Player player, Sign sign) {
-        Material material = getMaterial(sign);
-        if (material == null) {
-            player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                "&cInvalid sign!"));
-            return;
-        }
-        
-        double pricePerItem = getPrice(sign);
-        if (pricePerItem <= 0) {
-            player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                "&cInvalid price on sign!"));
-            return;
-        }
-        
-        // Count how many items player has
-        int itemCount = countItems(player, material);
-        
-        if (itemCount == 0) {
-            player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-                "&cYou don't have any &e" + material.name().toLowerCase().replace("_", " ") + " &cto sell!"));
-            return;
-        }
-        
-        // Remove items from inventory
-        int removed = removeItems(player, material, itemCount);
-        
-        // Calculate earnings
-        double earnings = removed * pricePerItem;
-        
-        // Give money
-        plugin.getEconomyManager().addBalance(player.getUniqueId(), earnings);
-        
-        // Send confirmation
-        player.sendMessage(MessageUtil.colorize(plugin.getConfig().getString("messages.prefix") + 
-            "&aSold &e" + removed + "x " + material.name().toLowerCase().replace("_", " ") + 
-            " &afor &6$" + String.format("%.2f", earnings)));
-        
-        // Update sign stats (line 3)
-        updateSignStats(sign, removed, "Sold");
+
+    private void showBatchMessage(Player player, PendingBatch batch) {
+        String msg = batch.isSell
+            ? MessageUtil.colorize("&aSold &e" + batch.amount + "x " + batch.materialName +
+                " &afor &6$" + String.format("%.2f", batch.total))
+            : MessageUtil.colorize("&aBought &e" + batch.amount + "x " + batch.materialName +
+                " &afor &6$" + String.format("%.2f", batch.total));
+        plugin.getActionBarManager().sendTemporary(player, msg);
     }
-    
-    /**
-     * Update sign statistics
-     */
-    private void updateSignStats(Sign sign, int amount, String action) {
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private void updateSignStats(Sign sign, int amount) {
         try {
-            String statsLine = org.bukkit.ChatColor.stripColor(sign.getLine(3));
+            String line = org.bukkit.ChatColor.stripColor(sign.getLine(3));
             int total = 0;
-            if (statsLine.contains(":")) {
-                String[] parts = statsLine.split(":");
-                if (parts.length > 1) {
-                    total = Integer.parseInt(parts[1].trim());
-                }
+            if (line.contains(":")) {
+                String[] parts = line.split(":");
+                if (parts.length > 1) total = Integer.parseInt(parts[1].trim().replace(",", ""));
             }
             total += amount;
-            sign.setLine(3, MessageUtil.colorize("&7" + action + ": &e" + total));
+            sign.setLine(3, MessageUtil.colorize("&7Total: &e" + total));
             sign.update();
-        } catch (Exception e) {
-            // Ignore stats update errors
-        }
+        } catch (Exception ignored) {}
     }
-    
-    /**
-     * Count items in player inventory
-     */
+
     private int countItems(Player player, Material material) {
         int count = 0;
         for (ItemStack item : player.getInventory().getContents()) {
-            if (item != null && item.getType() == material) {
-                count += item.getAmount();
-            }
+            if (item != null && item.getType() == material) count += item.getAmount();
         }
         return count;
     }
-    
-    /**
-     * Remove items from player inventory
-     */
+
     private int removeItems(Player player, Material material, int amount) {
         int remaining = amount;
         for (ItemStack item : player.getInventory().getContents()) {
@@ -244,7 +218,6 @@ public class SellSignManager {
                 int toRemove = Math.min(remaining, item.getAmount());
                 item.setAmount(item.getAmount() - toRemove);
                 remaining -= toRemove;
-                
                 if (remaining == 0) break;
             }
         }

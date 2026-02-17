@@ -70,10 +70,11 @@ public class SignListener implements Listener {
         Player player = event.getPlayer();
         Sign sign = (Sign) block.getState();
 
-        // Check if it's a SELL sign first
+        // Check if it's a SELL/BUY sign first
         if (plugin.getSellSignManager().isSellSign(sign)) {
-            event.setCancelled(true); // Prevent sign editor
-            plugin.getSellSignManager().handleSell(player, sign);
+            event.setCancelled(true);
+            boolean shiftClick = player.isSneaking();
+            plugin.getSellSignManager().handleSign(player, sign, shiftClick);
             return;
         }
 

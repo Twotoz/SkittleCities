@@ -6,6 +6,9 @@ import twotoz.skittleCities.data.DatabaseManager;
 import twotoz.skittleCities.data.Region;
 import twotoz.skittleCities.gui.HelpGUI;
 import twotoz.skittleCities.gui.MainMenuGUI;
+import twotoz.skittleCities.commands.CitySpawnCommand;
+import twotoz.skittleCities.commands.SetCityHospitalSpawnCommand;
+import twotoz.skittleCities.listeners.DeathPenaltyListener;
 import twotoz.skittleCities.listeners.ClaimMoveListener;
 import twotoz.skittleCities.listeners.CombatListener;
 import twotoz.skittleCities.listeners.CommandBlockListener;
@@ -86,7 +89,9 @@ public final class SkittleCities extends JavaPlugin {
         getCommand("cclaims").setExecutor(new ClaimsCommand(this));
         
         getCommand("city").setExecutor(new CityCommand(this));
+        getCommand("cspawn").setExecutor(new CitySpawnCommand(this));
         getCommand("setcityspawn").setExecutor(new SetCitySpawnCommand(this));
+        getCommand("setcityhospitalspawn").setExecutor(new SetCityHospitalSpawnCommand(this));
         getCommand("setleavespawn").setExecutor(new SetLeaveSpawnCommand(this));
         
         EconomyCommand economyCommand = new EconomyCommand(this);
@@ -125,6 +130,7 @@ public final class SkittleCities extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new SignListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
         getServer().getPluginManager().registerEvents(new WorldChangeListener(this), this);
+        getServer().getPluginManager().registerEvents(new DeathPenaltyListener(this), this);
         getServer().getPluginManager().registerEvents(new GodModeOverrideListener(this), this);
         getServer().getPluginManager().registerEvents(new CombatListener(this), this);
         getServer().getPluginManager().registerEvents(new MainMenuGUI(this), this);
