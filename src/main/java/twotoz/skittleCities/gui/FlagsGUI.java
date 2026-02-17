@@ -59,8 +59,22 @@ public class FlagsGUI implements Listener {
         Map<String, Boolean> flags;
         
         if (isWorldFlags) {
-            // World flags - just use what's in config
-            flags = plugin.getFlagManager().getWorldFlags();
+            // World flags - merge live config with defaults (same as claim flags)
+            flags = new java.util.LinkedHashMap<>();
+            org.bukkit.configuration.ConfigurationSection defaultWorldFlags =
+                plugin.getConfig().getConfigurationSection("default-world-flags");
+            Map<String, Boolean> liveWorldFlags = plugin.getFlagManager().getWorldFlags();
+
+            if (defaultWorldFlags != null) {
+                for (String flagName : defaultWorldFlags.getKeys(false)) {
+                    // Use live value if set, otherwise config default
+                    if (liveWorldFlags.containsKey(flagName)) {
+                        flags.put(flagName, liveWorldFlags.get(flagName));
+                    } else {
+                        flags.put(flagName, defaultWorldFlags.getBoolean(flagName));
+                    }
+                }
+            }
         } else {
             // Claim flags - merge region flags with defaults
             flags = new java.util.LinkedHashMap<>();

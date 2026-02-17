@@ -131,6 +131,8 @@ default-world-flags:
   entity-damage: true
   use-buttons: true
   use-levers: true
+  use-doors: true         # Default: Doors allowed outside claims
+  use-trapdoors: false    # Default: Trapdoors blocked outside claims
   chest-access: false
   explosion: false
   fire-spread: false
