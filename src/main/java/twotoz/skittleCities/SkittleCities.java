@@ -10,6 +10,7 @@ import twotoz.skittleCities.listeners.ClaimMoveListener;
 import twotoz.skittleCities.listeners.CombatListener;
 import twotoz.skittleCities.listeners.CommandBlockListener;
 import twotoz.skittleCities.listeners.FlyBlockListener;
+import twotoz.skittleCities.listeners.GodModeOverrideListener;
 import twotoz.skittleCities.listeners.MenuItemListener;
 import twotoz.skittleCities.listeners.PlayerJoinListener;
 import twotoz.skittleCities.listeners.ProtectionListener;
@@ -124,6 +125,7 @@ public final class SkittleCities extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new SignListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
         getServer().getPluginManager().registerEvents(new WorldChangeListener(this), this);
+        getServer().getPluginManager().registerEvents(new GodModeOverrideListener(this), this);
         getServer().getPluginManager().registerEvents(new CombatListener(this), this);
         getServer().getPluginManager().registerEvents(new MainMenuGUI(this), this);
         getServer().getPluginManager().registerEvents(new HelpGUI(this), this);

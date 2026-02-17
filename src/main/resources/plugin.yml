@@ -153,6 +153,7 @@ permissions:
       skittlecities.commandbypass: true
       skittlecities.balance.others: true
       skittlecities.fly: true
+      skittlecities.godmode: true
       
   skittlecities.player:
     description: Basic player permissions
@@ -176,4 +177,8 @@ permissions:
     
   skittlecities.fly:
     description: Allows flying in the city world
+    default: op
+    
+  skittlecities.godmode:
+    description: Allows using creative/spectator mode in the city world (admin bypass)
     default: op
